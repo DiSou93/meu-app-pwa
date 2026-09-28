@@ -885,8 +885,12 @@ if (btnResetarDados) {
 
 if ("serviceWorker" in navigator) {
     window.addEventListener("load", () => {
-        navigator.serviceWorker.register("./sw.js")
-            .then(reg => console.log("[PWA] Service Worker registrado com sucesso:", reg.scope))
+        // Usa o caminho base dinâmico para funcionar perfeitamente no GitHub Pages
+        const basePath = window.location.pathname.includes('/') ? window.location.pathname.substring(0, window.location.pathname.lastIndexOf('/') + 1) : '/';
+        const swUrl = basePath + 'sw.js';
+
+        navigator.serviceWorker.register(swUrl)
+            .then(reg => console.log("[PWA] Service Worker registrado com sucesso em:", reg.scope))
             .catch(err => console.log("[PWA] Falha ao registrar Service Worker:", err));
     });
 }
