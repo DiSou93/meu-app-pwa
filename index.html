@@ -1,0 +1,500 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+
+    <!-- Anti-Cache para Desenvolvimento -->
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+    <meta http-equiv="Pragma" content="no-cache" />
+    <meta http-equiv="Expires" content="0" />
+
+    <!-- Configurações PWA e Visual Nativo iPad/iOS -->
+    <meta name="theme-color" content="#111827">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Meu App">
+
+    <!-- Ícone e Manifesto -->
+    <link rel="apple-touch-icon" href="icons/icon-192.png">
+    <link rel="manifest" href="manifest.json">
+
+    <title>Meu App</title>
+
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+    <div id="app">
+
+        <!-- ========================= -->
+        <!-- TELA INICIAL -->
+        <!-- ========================= -->
+
+        <section id="telaInicio" class="tela">
+
+            <header class="topo">
+                <h1>Meu App</h1>
+                <p>Seu espaço pessoal</p>
+            </header>
+
+            <main>
+                <section class="boas-vindas">
+                    <h2>Olá!</h2>
+                    <p>O que você deseja acessar?</p>
+                </section>
+
+                <section class="menu">
+                    <button class="card" id="btnTrabalho">
+                        <span class="icone">👮</span>
+                        <span class="titulo">Trabalho</span>
+                        <span class="descricao">Serviço e ferramentas</span>
+                    </button>
+
+                    <button class="card" id="btnFinancas">
+                        <span class="icone">💰</span>
+                        <span class="titulo">Finanças</span>
+                        <span class="descricao">Controle financeiro</span>
+                    </button>
+
+                    <button class="card" id="btnConfiguracoes">
+                        <span class="icone">⚙️</span>
+                        <span class="titulo">Configurações</span>
+                        <span class="descricao">Preferências do app</span>
+                    </button>
+                </section>
+            </main>
+
+        </section>
+
+
+        <!-- ========================= -->
+        <!-- TELA TRABALHO (MENU) -->
+        <!-- ========================= -->
+
+        <section id="telaTrabalho" class="tela" hidden>
+
+            <header class="topo">
+                <h1>Trabalho</h1>
+                <p>Ferramentas operacionais</p>
+            </header>
+
+            <main>
+                <section class="menu">
+                    <button class="card" id="btnQualificacao">
+                        <span class="icone">📋</span>
+                        <span class="titulo">Qualificação</span>
+                        <span class="descricao">Dados de abordados e envolvidos</span>
+                    </button>
+
+                    <button class="card" id="btnMeuTurno">
+                        <span class="icone">🚔</span>
+                        <span class="titulo">Meu Turno</span>
+                        <span class="descricao">Controle de viatura e rodagem</span>
+                    </button>
+                </section>
+            </main>
+
+        </section>
+
+
+        <!-- ========================= -->
+        <!-- TELA QUALIFICAÇÃO -->
+        <!-- ========================= -->
+
+        <section id="telaQualificacao" class="tela" hidden>
+
+            <header class="topo">
+                <button id="btnVoltarTrabalhoQualificacao" class="botao-voltar">← Voltar</button>
+                <h1>Qualificação</h1>
+                <p>Registro rápido para ocorrências</p>
+            </header>
+
+            <main>
+                <form id="formQualificacao" class="formulario-qualificacao">
+                    
+                    <div class="campo-form">
+                        <label>Condição no Fato</label>
+                        <select id="qCondicao">
+                            <option value="Autor">Autor / Infrator</option>
+                            <option value="Vítima">Vítima</option>
+                            <option value="Testemunha">Testemunha</option>
+                            <option value="Suspeito">Suspeito</option>
+                            <option value="Condutor">Condutor</option>
+                            <option value="Outro">Outro</option>
+                        </select>
+                    </div>
+
+                    <div class="campo-form">
+                        <label>Nome Completo</label>
+                        <input type="text" id="qNome" placeholder="Ex: João da Silva">
+                    </div>
+
+                    <div class="campo-form">
+                        <label>Nome da Mãe</label>
+                        <input type="text" id="qMae" placeholder="Nome completo da mãe">
+                    </div>
+
+                    <div class="campo-form">
+                        <label>Nome do Pai</label>
+                        <input type="text" id="qPai" placeholder="Nome completo do pai">
+                    </div>
+
+                    <div class="campo-form">
+                        <label>CPF</label>
+                        <input type="text" id="qCpf" placeholder="000.000.000-00">
+                    </div>
+
+                    <div class="campo-form">
+                        <label>RG / Órgão Expedidor</label>
+                        <input type="text" id="qRg" placeholder="Ex: MG-12.345.678 SSP/MG">
+                    </div>
+
+                    <div class="campo-form">
+                        <label>Endereço</label>
+                        <input type="text" id="qEndereco" placeholder="Rua, Nº, Bairro, Cidade">
+                    </div>
+
+                    <div class="campo-form">
+                        <label>Telefone / WhatsApp</label>
+                        <input type="tel" id="qTelefone" placeholder="(00) 00000-0000">
+                    </div>
+
+                    <div class="campo-form">
+                        <label>Profissão</label>
+                        <input type="text" id="qProfissao" placeholder="Ex: Autônomo, Pedreiro, etc.">
+                    </div>
+
+                    <div class="campo-form">
+                        <label>Escolaridade / Ensino</label>
+                        <select id="qEnsino">
+                            <option value="Não informado">Não informado</option>
+                            <option value="Fundamental Incompleto">Fundamental Incompleto</option>
+                            <option value="Fundamental Completo">Fundamental Completo</option>
+                            <option value="Médio Incompleto">Médio Incompleto</option>
+                            <option value="Médio Completo">Médio Completo</option>
+                            <option value="Superior Incompleto">Superior Incompleto</option>
+                            <option value="Superior Completo">Superior Completo</option>
+                        </select>
+                    </div>
+
+                    <div class="campo-form">
+                        <label>Estado Civil</label>
+                        <select id="qEstadoCivil">
+                            <option value="Solteiro(a)">Solteiro(a)</option>
+                            <option value="Casado(a)">Casado(a)</option>
+                            <option value="União Estável">União Estável</option>
+                            <option value="Divorciado(a)">Divorciado(a)</option>
+                            <option value="Viúvo(a)">Viúvo(a)</option>
+                        </select>
+                    </div>
+
+                    <div class="acoes-formulario">
+                        <button type="button" id="btnCopiarQualificacao" class="botao-principal">📋 Copiar Texto Formatado</button>
+                        <button type="submit" class="botao-secundario">💾 Salvar no Histórico</button>
+                        <button type="button" id="btnLimparFormQualificacao" class="botao-excluir" style="width:100%; text-align:center; padding:10px;">Limpar Formulário</button>
+                    </div>
+
+                </form>
+
+                <hr style="margin: 24px 0; border: none; border-top: 1px solid var(--border-color);">
+
+                <h2>Histórico Salvo</h2>
+                <div id="listaQualificacoesSalvas" class="lista-lancamentos" style="margin-top: 14px;"></div>
+            </main>
+
+        </section>
+
+
+        <!-- ========================= -->
+        <!-- TELA MEU TURNO -->
+        <!-- ========================= -->
+
+        <section id="telaMeuTurno" class="tela" hidden>
+
+            <header class="topo">
+                <button id="btnVoltarTrabalhoTurno" class="botao-voltar">← Voltar</button>
+                <h1>Meu Turno</h1>
+                <p>Registro de viatura e quilometragem</p>
+            </header>
+
+            <main>
+                <form id="formMeuTurno" class="formulario-qualificacao">
+                    
+                    <div class="campo-form">
+                        <label>Viatura (Prefixo/Modelo)</label>
+                        <input type="text" id="tViatura" placeholder="Ex: VP 12345 / Duster">
+                    </div>
+
+                    <div class="campo-form">
+                        <label>Box / Setor</label>
+                        <input type="text" id="tBox" placeholder="Ex: Box 01 / Setor Centro">
+                    </div>
+
+                    <div class="campo-form">
+                        <label>KM Inicial</label>
+                        <input type="number" id="tKmInicial" placeholder="Ex: 102300">
+                    </div>
+
+                    <div class="campo-form">
+                        <label>KM Final</label>
+                        <input type="number" id="tKmFinal" placeholder="Ex: 102450">
+                    </div>
+
+                    <div class="acoes-formulario">
+                        <button type="button" id="btnCopiarTurno" class="botao-principal">📋 Copiar Resumo do Turno</button>
+                        <button type="submit" class="botao-secundario">💾 Salvar no Histórico</button>
+                        <button type="button" id="btnLimparFormTurno" class="botao-excluir" style="width:100%; text-align:center; padding:10px;">Limpar Formulário</button>
+                    </div>
+
+                </form>
+
+                <hr style="margin: 24px 0; border: none; border-top: 1px solid var(--border-color);">
+
+                <h2>Histórico de Turnos</h2>
+                <div id="listaTurnosSalvos" class="lista-lancamentos" style="margin-top: 14px;"></div>
+            </main>
+
+        </section>
+
+
+        <!-- ========================= -->
+        <!-- TELA FINANÇAS -->
+        <!-- ========================= -->
+
+        <section id="telaFinancas" class="tela" hidden>
+
+            <header class="topo">
+                <h1>Finanças</h1>
+                <p>Controle financeiro geral</p>
+            </header>
+
+            <main>
+                <section class="saldo" id="cardSaldoStatus">
+                    <span class="saldo-label">Disponível no Mês</span>
+                    <strong id="valorDisponivel">R$ 0,00</strong>
+                    
+                    <!-- Barra de Progresso de Renda Comprometida -->
+                    <div class="progresso-container">
+                        <div class="progresso-bar" id="barraProgressoRenda"></div>
+                    </div>
+                    <small id="textoProgressoRenda" class="progresso-texto">0% da renda comprometida</small>
+
+                    <div class="resumo-detalhes">
+                        <span>Entradas: <b id="resumoEntradas">R$ 0,00</b></span>
+                        <span>Gastos: <b id="resumoGastos">R$ 0,00</b></span>
+                    </div>
+                </section>
+
+                <section class="menu-financas" id="containerFinancas">
+                    <button class="card-financeiro" id="btnEntrada" data-id="entrada">
+                        <span class="icone">💰</span>
+                        <span class="titulo">Entrada</span>
+                        <span class="descricao">Salários e recebidos</span>
+                    </button>
+
+                    <button class="card-financeiro" id="btnCartao" data-id="cartao">
+                        <span class="icone">💳</span>
+                        <span class="titulo">Cartão</span>
+                        <span class="descricao">Compras parceladas</span>
+                    </button>
+
+                    <button class="card-financeiro" id="btnFixos" data-id="fixos">
+                        <span class="icone">🏠</span>
+                        <span class="titulo">Gastos Fixos</span>
+                        <span class="descricao">Aluguel, contas da casa</span>
+                    </button>
+
+                    <button class="card-financeiro" id="btnMercado" data-id="mercado">
+                        <span class="icone">🛒</span>
+                        <span class="titulo">Mercado</span>
+                        <span class="descricao">Supermercado e compras</span>
+                    </button>
+
+                    <button class="card-financeiro" id="btnTransporte" data-id="transporte">
+                        <span class="icone">⛽</span>
+                        <span class="titulo">Transporte</span>
+                        <span class="descricao">Combustível e posto</span>
+                    </button>
+
+                    <button class="card-financeiro" id="btnLazer" data-id="lazer">
+                        <span class="icone">🎮</span>
+                        <span class="titulo">Lazer</span>
+                        <span class="descricao">Passeios e diversão</span>
+                    </button>
+
+                    <button class="card-financeiro" id="btnAssinaturas" data-id="assinaturas">
+                        <span class="icone">🔄</span>
+                        <span class="titulo">Assinaturas</span>
+                        <span class="descricao">Serviços recorrentes</span>
+                    </button>
+                </section>
+            </main>
+
+        </section>
+
+
+        <!-- ========================= -->
+        <!-- TELA ENTRADAS -->
+        <!-- ========================= -->
+
+        <section id="telaEntradas" class="tela" hidden>
+            <header class="topo">
+                <button class="botao-voltar btn-voltar-financas">← Voltar</button>
+                <h1>Entradas</h1>
+                <p>Ganhos e rendimentos do mês</p>
+            </header>
+            <main>
+                <section class="saldo">
+                    <span class="saldo-label">Total Recebido</span>
+                    <strong id="totalEntradas">R$ 0,00</strong>
+                </section>
+                <section id="listaEntradas" class="lista-lancamentos"></section>
+                <button id="btnNovaEntrada" class="botao-principal">+ Adicionar Entrada</button>
+            </main>
+        </section>
+
+
+        <!-- ========================= -->
+        <!-- TELA CARTÕES DE CRÉDITO -->
+        <!-- ========================= -->
+
+        <section id="telaCartao" class="tela" hidden>
+            <header class="topo">
+                <button class="botao-voltar btn-voltar-financas">← Voltar</button>
+                <h1>Cartões de Crédito</h1>
+                <p>Apenas compras parceladas</p>
+            </header>
+            <main>
+                <section class="saldo">
+                    <span class="saldo-label">Fatura Mensal (Parcelas do Mês)</span>
+                    <strong id="totalParcelasMes">R$ 0,00</strong>
+                </section>
+
+                <div class="acoes-cartao" style="display: flex; gap: 10px; margin-bottom: 20px;">
+                    <button id="btnNovoCartao" class="botao-secundario">+ Novo Cartão</button>
+                    <button id="btnNovaCompraParcelada" class="botao-principal">+ Nova Compra</button>
+                </div>
+
+                <div id="containerCartoes" class="secao-cartoes"></div>
+            </main>
+        </section>
+
+
+        <!-- ========================= -->
+        <!-- TELA GENÉRICA DE GASTOS -->
+        <!-- ========================= -->
+
+        <section id="telaGastosGenerica" class="tela" hidden>
+            <header class="topo">
+                <button class="botao-voltar btn-voltar-financas">← Voltar</button>
+                <h1 id="tituloTelaGasto">Gastos</h1>
+                <p id="subtituloTelaGasto">Detalhamento</p>
+            </header>
+            <main>
+                <section class="saldo">
+                    <span class="saldo-label">Total na Categoria</span>
+                    <strong id="totalCategoriaGasto">R$ 0,00</strong>
+                </section>
+                <section id="listaGastosCategoria" class="lista-lancamentos"></section>
+                <button id="btnNovoGastoCategoria" class="botao-principal">+ Adicionar Gasto</button>
+            </main>
+        </section>
+
+
+        <!-- ========================= -->
+        <!-- TELA CONFIGURAÇÕES -->
+        <!-- ========================= -->
+
+        <section id="telaConfiguracoes" class="tela" hidden>
+
+            <header class="topo">
+                <h1>Configurações</h1>
+                <p>Gestão de dados e backup</p>
+            </header>
+
+            <main>
+                <section class="formulario-qualificacao" style="gap: 20px;">
+                    
+                    <div>
+                        <h3 style="font-size: 16px; font-weight: 700; margin-bottom: 6px;">💾 Backup dos Dados</h3>
+                        <p style="font-size: 13px; color: var(--text-muted); margin-bottom: 14px;">
+                            Faça o download de um arquivo com todas as suas informações de Finanças, Qualificações e Turnos para guardar com segurança.
+                        </p>
+                        <button id="btnExportarBackup" class="botao-principal">📥 Baixar Arquivo de Backup (JSON)</button>
+                    </div>
+
+                    <hr style="border: none; border-top: 1px solid var(--border-color);">
+
+                    <div>
+                        <h3 style="font-size: 16px; font-weight: 700; margin-bottom: 6px;">📤 Restaurar Backup</h3>
+                        <p style="font-size: 13px; color: var(--text-muted); margin-bottom: 14px;">
+                            Selecione um arquivo de backup (.json) salvo anteriormente para restaurar seus dados neste aparelho.
+                        </p>
+                        <input type="file" id="inputImportarBackup" accept=".json" style="display: none;">
+                        <button id="btnImportarBackup" class="botao-secundario">📂 Selecionar Arquivo de Backup</button>
+                    </div>
+
+                    <hr style="border: none; border-top: 1px solid var(--border-color);">
+
+                    <div>
+                        <h3 style="font-size: 16px; font-weight: 700; color: var(--danger); margin-bottom: 6px;">⚠️ Zona de Perigo</h3>
+                        <p style="font-size: 13px; color: var(--text-muted); margin-bottom: 14px;">
+                            Apaga permanentemente todos os lançamentos, cartões, qualificações e histórico armazenados no app.
+                        </p>
+                        <button id="btnResetarDados" class="botao-excluir" style="width: 100%; padding: 12px; background: rgba(255, 59, 48, 0.1); border-radius: 12px; border: 1px solid var(--danger);">
+                            🗑️ Limpar Todos os Dados do App
+                        </button>
+                    </div>
+
+                </section>
+            </main>
+
+        </section>
+
+        <!-- ======================================== -->
+        <!-- TAB BAR INFERIOR (NAVEGAÇÃO NATIVA iOS) -->
+        <!-- ======================================== -->
+        <nav class="tab-bar">
+            <button class="tab-item ativo" id="tabInicio">
+                <span class="tab-icone">🏠</span>
+                <span class="tab-rotulo">Início</span>
+            </button>
+            <button class="tab-item" id="tabTrabalho">
+                <span class="tab-icone">👮</span>
+                <span class="tab-rotulo">Trabalho</span>
+            </button>
+            <button class="tab-item" id="tabFinancas">
+                <span class="tab-icone">💰</span>
+                <span class="tab-rotulo">Finanças</span>
+            </button>
+            <button class="tab-item" id="tabConfiguracoes">
+                <span class="tab-icone">⚙️</span>
+                <span class="tab-rotulo">Ajustes</span>
+            </button>
+        </nav>
+
+        <!-- ======================================== -->
+        <!-- CONTAINER DE MODAL (BOTTOM SHEET iOS) -->
+        <!-- ======================================== -->
+        <div id="modalOverlay" class="modal-overlay" hidden>
+            <div class="modal-sheet">
+                <div class="modal-handle"></div>
+                <h3 id="modalTitulo" class="modal-titulo">Título do Modal</h3>
+                <div id="modalConteudo" class="modal-conteudo"></div>
+                <div class="modal-acoes">
+                    <button id="btnModalConfirmar" class="botao-principal">Confirmar</button>
+                    <button id="btnModalCancelar" class="botao-secundario">Cancelar</button>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <script src="./app.js"></script>
+
+</body>
+
+</html>
