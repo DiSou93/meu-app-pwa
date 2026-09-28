@@ -1,18 +1,39 @@
 /* ========================================
-   ESTILOS GLOBAIS - iOS NATIVE PWA
+   ESTILO NATIVO iOS (APPLE DESIGN SYSTEM)
    ======================================== */
 
    :root {
-    --bg-app: #000000;
-    --card-bg: #1c1c1e;
-    --card-bg-secondary: #2c2c2e;
-    --text-main: #ffffff;
+    --bg-app: #f2f2f7;
+    --card-bg: #ffffff;
+    --primary: #111827;
+    --text-main: #1c1c1e;
     --text-muted: #8e8e93;
-    --accent: #0a84ff;
-    --success: #30d158;
-    --warning: #ffd60a;
-    --danger: #ff453a;
-    --border-color: #38383a;
+    --border-color: #e5e5ea;
+    --accent: #007aff;
+    --danger: #ff3b30;
+    --success: #34c759;
+    --warning: #ff9500;
+    --radius-card: 20px;
+    --radius-input: 12px;
+  }
+  
+  /* SUPORTE AUTOMÁTICO A MODO ESCURO (DARK MODE) */
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg-app: #000000;
+      --card-bg: #1c1c1e;
+      --primary: #1f2937;
+      --text-main: #ffffff;
+      --text-muted: #98989d;
+      --border-color: #2c2c2e;
+    }
+  }
+  
+  * {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    -webkit-tap-highlight-color: transparent;
   }
   
   body {
@@ -20,132 +41,376 @@
     background-color: var(--bg-app);
     color: var(--text-main);
     min-height: 100vh;
-    min-height: -webkit-fill-available;
-    padding-bottom: calc(80px + env(safe-area-inset-bottom, 0px));
+    padding-bottom: 80px; /* Espaço para Tab Bar */
     -webkit-font-smoothing: antialiased;
-    margin: 0;
   }
   
   #app {
     max-width: 600px;
     margin: 0 auto;
     min-height: 100vh;
-    min-height: -webkit-fill-available;
     position: relative;
   }
   
   /* ========================================
-     TAB BAR (NAVEGAÇÃO INFERIOR)
+     TELAS E ANIMAÇÃO DE TRANSIÇÃO (iOS PUSH)
+     ======================================== */
+  
+  .tela {
+    display: block;
+    min-height: 100vh;
+    animation: iosPush 0.25s cubic-bezier(0.2, 0.8, 0.2, 1);
+  }
+  
+  .tela[hidden] {
+    display: none !important;
+  }
+  
+  @keyframes iosPush {
+    from {
+      opacity: 0;
+      transform: translateX(20px);
+    }
+    to {
+      opacity: 1;
+      transform: translateX(0);
+    }
+  }
+  
+  /* ========================================
+     CABEÇALHO (TOPO ESTILO iOS)
+     ======================================== */
+  
+  .topo {
+    background: var(--primary);
+    color: #ffffff;
+    padding: calc(20px + env(safe-area-inset-top, 0px)) 24px 24px 24px;
+    border-radius: 0 0 28px 28px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.12);
+  }
+  
+  .topo h1 {
+    font-size: 30px;
+    font-weight: 700;
+    letter-spacing: -0.5px;
+  }
+  
+  .topo p {
+    margin-top: 2px;
+    font-size: 14px;
+    color: rgba(255, 255, 255, 0.7);
+  }
+  
+  /* BOTÃO VOLTAR */
+  .botao-voltar {
+    border: none;
+    background: rgba(255, 255, 255, 0.15);
+    color: #ffffff;
+    font-size: 13px;
+    font-weight: 600;
+    padding: 6px 14px;
+    border-radius: 20px;
+    margin-bottom: 12px;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    backdrop-filter: blur(10px);
+  }
+  
+  .botao-voltar:active {
+    background: rgba(255, 255, 255, 0.3);
+  }
+  
+  /* ========================================
+     CONTEÚDO PRINCIPAL & CARDS
+     ======================================== */
+  
+  main {
+    padding: 20px;
+  }
+  
+  .boas-vindas h2 {
+    font-size: 22px;
+    font-weight: 700;
+  }
+  
+  .boas-vindas p {
+    color: var(--text-muted);
+    font-size: 14px;
+    margin-bottom: 16px;
+  }
+  
+  .menu,
+  .menu-financas {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+  }
+  
+  .card,
+  .card-financeiro {
+    border: none;
+    background: var(--card-bg);
+    border-radius: var(--radius-card);
+    padding: 18px 16px;
+    min-height: 130px;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    justify-content: center;
+    text-align: left;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.04);
+    cursor: pointer;
+    transition: transform 0.15s ease;
+  }
+  
+  .card:active,
+  .card-financeiro:active {
+    transform: scale(0.96);
+  }
+  
+  .icone {
+    font-size: 30px;
+    margin-bottom: 8px;
+  }
+  
+  .titulo {
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--text-main);
+  }
+  
+  .descricao {
+    margin-top: 2px;
+    font-size: 12px;
+    color: var(--text-muted);
+  }
+  
+  /* ========================================
+     PAINEL FINANCEIRO E BARRA DE PROGRESSO
+     ======================================== */
+  
+  .saldo {
+    background: var(--card-bg);
+    border-radius: 24px;
+    padding: 20px;
+    margin-bottom: 20px;
+    text-align: center;
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.05);
+    border-left: 6px solid var(--success);
+  }
+  
+  .saldo.alerta-amarelo { border-left-color: var(--warning); }
+  .saldo.alerta-vermelho { border-left-color: var(--danger); }
+  .saldo.alerta-vermelho strong { color: var(--danger); }
+  
+  .saldo-label {
+    font-size: 13px;
+    color: var(--text-muted);
+  }
+  
+  .saldo strong {
+    font-size: 32px;
+    font-weight: 700;
+    letter-spacing: -1px;
+    display: block;
+    margin: 4px 0 12px 0;
+  }
+  
+  .progresso-container {
+    width: 100%;
+    height: 8px;
+    background: var(--border-color);
+    border-radius: 10px;
+    overflow: hidden;
+    margin-bottom: 6px;
+  }
+  
+  .progresso-bar {
+    height: 100%;
+    width: 0%;
+    background: var(--success);
+    border-radius: 10px;
+    transition: width 0.4s ease, background-color 0.4s ease;
+  }
+  
+  .progresso-texto {
+    font-size: 12px;
+    color: var(--text-muted);
+  }
+  
+  .resumo-detalhes {
+    display: flex;
+    justify-content: space-around;
+    margin-top: 14px;
+    padding-top: 12px;
+    border-top: 1px solid var(--border-color);
+    font-size: 13px;
+    color: var(--text-muted);
+  }
+  
+  .resumo-detalhes b { color: var(--text-main); }
+  
+  /* ========================================
+     FORMULÁRIOS & CAMPOS
+     ======================================== */
+  
+  .formulario-qualificacao {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    background: var(--card-bg);
+    padding: 20px;
+    border-radius: 20px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.04);
+  }
+  
+  .campo-form {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+  
+  .campo-form label {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-main);
+  }
+  
+  .campo-form input,
+  .campo-form select {
+    width: 100%;
+    padding: 12px 14px;
+    border-radius: var(--radius-input);
+    border: 1px solid var(--border-color);
+    background: var(--bg-app);
+    font-size: 15px;
+    color: var(--text-main);
+    outline: none;
+    font-family: inherit;
+  }
+  
+  /* ========================================
+     BOTÕES E AÇÕES
+     ======================================== */
+  
+  .botao-principal {
+    width: 100%;
+    background: var(--primary);
+    color: #ffffff;
+    border: none;
+    padding: 14px;
+    border-radius: var(--radius-input);
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: transform 0.15s ease;
+  }
+  
+  .botao-principal:active { transform: scale(0.97); }
+  
+  .botao-secundario {
+    width: 100%;
+    background: var(--border-color);
+    color: var(--text-main);
+    border: none;
+    padding: 14px;
+    border-radius: var(--radius-input);
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+  }
+  
+  .botao-secundario:active { transform: scale(0.97); }
+  
+  .botao-excluir {
+    background: transparent;
+    border: none;
+    color: var(--danger);
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+  }
+  
+  /* ========================================
+     TAB BAR INFERIOR (ESTILO iOS)
      ======================================== */
   
   .tab-bar {
     position: fixed;
     bottom: 0;
-    left: 50%;
-    transform: translateX(-50%);
-    width: 100%;
+    left: 0;
+    right: 0;
     max-width: 600px;
-    background: rgba(28, 28, 30, 0.85);
+    margin: 0 auto;
+    height: 65px;
+    background: rgba(255, 255, 255, 0.85);
     backdrop-filter: blur(20px);
     -webkit-backdrop-filter: blur(20px);
     border-top: 1px solid var(--border-color);
     display: flex;
     justify-content: space-around;
-    padding: 8px 0 calc(8px + env(safe-area-inset-bottom, 0px)) 0;
+    align-items: center;
     z-index: 1000;
+    padding-bottom: env(safe-area-inset-bottom, 5px);
+  }
+  
+  @media (prefers-color-scheme: dark) {
+    .tab-bar {
+      background: rgba(28, 28, 30, 0.85);
+    }
   }
   
   .tab-item {
-    background: none;
+    background: transparent;
     border: none;
-    color: var(--text-muted);
-    font-size: 11px;
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 4px;
+    gap: 2px;
+    color: var(--text-muted);
+    font-size: 11px;
+    font-weight: 500;
     cursor: pointer;
     flex: 1;
-    transition: color 0.2s;
   }
+  
+  .tab-icone { font-size: 20px; }
   
   .tab-item.ativo {
     color: var(--accent);
+    font-weight: 700;
   }
   
   /* ========================================
-     COMPONENTES & CARDS ESTILO iOS
-     ======================================== */
-  
-  .card, .lancamento {
-    background: var(--card-bg);
-    border-radius: 16px;
-    padding: 16px;
-    box-sizing: border-box;
-    border: 1px solid var(--border-color);
-    margin-bottom: 12px;
-  }
-  
-  .botao-primario {
-    background: var(--accent);
-    color: #fff;
-    border: none;
-    border-radius: 12px;
-    padding: 14px 16px;
-    font-weight: 600;
-    font-size: 15px;
-    width: 100%;
-    cursor: pointer;
-  }
-  
-  .botao-secundario {
-    background: var(--card-bg-secondary);
-    color: var(--text-main);
-    border: none;
-    border-radius: 10px;
-    padding: 10px 14px;
-    font-size: 14px;
-    cursor: pointer;
-  }
-  
-  .botao-excluir {
-    background: none;
-    border: none;
-    color: var(--danger);
-    cursor: pointer;
-    font-weight: 500;
-    font-size: 13px;
-  }
-  
-  /* ========================================
-     MODAIS (BOTTOM SHEET)
+     MODAL BOTTOM SHEET (ESTILO iOS)
      ======================================== */
   
   .modal-overlay {
     position: fixed;
     top: 0;
     left: 0;
-    width: 100%;
-    height: 100%;
-    background: rgba(0, 0, 0, 0.6);
-    backdrop-filter: blur(5px);
-    -webkit-backdrop-filter: blur(5px);
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.4);
+    backdrop-filter: blur(4px);
+    z-index: 2000;
     display: flex;
     align-items: flex-end;
     justify-content: center;
-    z-index: 2000;
+    animation: fadeIn 0.2s ease;
   }
   
+  .modal-overlay[hidden] { display: none !important; }
+  
   .modal-sheet {
-    background: var(--card-bg);
     width: 100%;
     max-width: 600px;
-    border-top-left-radius: 24px;
-    border-top-right-radius: 24px;
-    padding: 24px;
-    box-sizing: border-box;
-    border-top: 1px solid var(--border-color);
-    animation: slideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    background: var(--card-bg);
+    border-radius: 28px 28px 0 0;
+    padding: 20px 20px 30px 20px;
+    box-shadow: 0 -10px 30px rgba(0, 0, 0, 0.2);
+    animation: slideUp 0.25s cubic-bezier(0.2, 0.8, 0.2, 1);
   }
   
   @keyframes slideUp {
@@ -153,35 +418,44 @@
     to { transform: translateY(0); }
   }
   
-  /* ========================================
-     FORMULÁRIOS
-     ======================================== */
+  .modal-handle {
+    width: 36px;
+    height: 5px;
+    background: var(--border-color);
+    border-radius: 10px;
+    margin: 0 auto 16px auto;
+  }
   
-  .campo-form {
+  .modal-titulo {
+    font-size: 18px;
+    font-weight: 700;
+    margin-bottom: 16px;
+    text-align: center;
+  }
+  
+  .modal-conteudo {
+    margin-bottom: 20px;
+  }
+  
+  .modal-acoes {
     display: flex;
     flex-direction: column;
-    gap: 6px;
-    margin-bottom: 12px;
+    gap: 10px;
   }
   
-  .campo-form label {
-    font-size: 13px;
-    color: var(--text-muted);
+  .lista-lancamentos {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
   }
   
-  .campo-form input, .campo-form select, .campo-form textarea {
-    background: var(--card-bg-secondary);
-    border: 1px solid var(--border-color);
-    border-radius: 10px;
-    padding: 12px;
-    color: var(--text-main);
-    font-size: 15px;
-    width: 100%;
-    box-sizing: border-box;
-    outline: none;
-  }
-  
-  .campo-form input:focus, .campo-form select:focus {
-    border-color: var(--accent);
+  .lancamento {
+    background: var(--card-bg);
+    padding: 14px 16px;
+    border-radius: 14px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.03);
   }
   
