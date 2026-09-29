@@ -272,6 +272,18 @@
             </header>
 
             <main>
+                
+                <!-- NAVEGAÇÃO ENTRE MESES -->
+<section class="navegacao-mes">
+    <button id="btnCompetenciaAnterior" class="botao-mes">‹</button>
+
+    <div class="mes-atual">
+        <span>Competência</span>
+        <strong id="textoMesAtual">Setembro/2026</strong>
+    </div>
+
+    <button id="btnProximoMes" class="botao-mes">›</button>
+</section>
                 <section class="saldo" id="cardSaldoStatus">
                     <span class="saldo-label">Disponível no Mês</span>
                     <strong id="valorDisponivel">R$ 0,00</strong>
@@ -284,7 +296,9 @@
 
                     <div class="resumo-detalhes">
                         <span>Entradas: <b id="resumoEntradas">R$ 0,00</b></span>
-                        <span>Gastos: <b id="resumoGastos">R$ 0,00</b></span>
+                        <span id="btnDetalharGastos" style="cursor:pointer;">
+                            Gastos: <b id="resumoGastos">R$ 0,00</b> ›
+                        </span>
                     </div>
                 </section>
 

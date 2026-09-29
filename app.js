@@ -26,6 +26,12 @@ let ordemFinancas = JSON.parse(localStorage.getItem("meuAppOrdemFinancas")) || [
 
 let categoriaAtualGasto = null;
 
+// Mês atualmente selecionado no módulo Finanças
+const hoje = new Date();
+
+let mesFinanceiro = hoje.getMonth();
+let anoFinanceiro = hoje.getFullYear();
+
 const configCategorias = {
     mercado: { titulo: "Mercado", subtitulo: "Supermercado e compras do dia a dia" },
     lazer: { titulo: "Lazer", subtitulo: "Passeios, restaurantes e diversão" },
@@ -75,6 +81,12 @@ const btnMercado = document.getElementById("btnMercado");
 const btnTransporte = document.getElementById("btnTransporte");
 const btnLazer = document.getElementById("btnLazer");
 const btnAssinaturas = document.getElementById("btnAssinaturas");
+
+// Seletor de mês das Finanças
+const btnMesAnterior = document.getElementById("btnMesAnterior");
+const btnMesSeguinte = document.getElementById("btnMesSeguinte");
+const btnCompetenciaAnterior = document.getElementById("btnCompetenciaAnterior");
+const mesFinanceiroAtual = document.getElementById("mesFinanceiroAtual");
 
 // Tab Bar
 const tabInicio = document.getElementById("tabInicio");
@@ -270,6 +282,11 @@ function renderizarQualificacoesSalvas() {
     if (!lista) return;
 
     lista.innerHTML = "";
+    const competencia = obterCompetenciaAtual();
+
+const entradasDoMes = entradas.filter(
+    item => item.competencia === competencia
+);
     if (qualificacoesSalvas.length === 0) {
         lista.innerHTML = `<p style="text-align:center; opacity:0.6; padding:1rem;">Nenhuma qualificação salva.</p>`;
         return;
@@ -407,24 +424,261 @@ window.excluirTurno = function(id) {
     renderizarTurnosSalvos();
 };
 
+// ========================================
+// CONTROLE DE COMPETÊNCIA FINANCEIRA
+// ========================================
+
+function atualizarMesFinanceiro() {
+    const textoMesAtual = document.getElementById("textoMesAtual");
+    if (!textoMesAtual) return;
+
+    const data = new Date(anoFinanceiro, mesFinanceiro, 1);
+
+    let texto = data.toLocaleDateString("pt-BR", {
+        month: "long",
+        year: "numeric"
+    });
+
+    texto = texto.charAt(0).toUpperCase() + texto.slice(1);
+
+    textoMesAtual.textContent = texto;
+}
+
+function alterarMesFinanceiro(diferenca) {
+    mesFinanceiro += diferenca;
+
+    if (mesFinanceiro < 0) {
+        mesFinanceiro = 11;
+        anoFinanceiro--;
+    }
+
+    if (mesFinanceiro > 11) {
+        mesFinanceiro = 0;
+        anoFinanceiro++;
+    }
+
+    atualizarMesFinanceiro();
+    atualizarBalançoGeral();
+
+if (!telaEntradas.hidden) {
+    atualizarListaEntradas();
+}
+}
+
+function obterCompetenciaAtual() {
+    const mes = String(mesFinanceiro + 1).padStart(2, "0");
+    return `${anoFinanceiro}-${mes}`;
+}
+
+// Competência que o usuário está visualizando
+let competenciaSelecionada = obterCompetenciaAtual();
+
+function obterCompetenciaSelecionada() {
+    return competenciaSelecionada;
+}
+
+function alterarCompetenciaMes(delta) {
+    const [ano, mes] = competenciaSelecionada.split("-").map(Number);
+
+    const data = new Date(ano, (mes - 1) + delta, 1);
+
+    competenciaSelecionada =
+        `${data.getFullYear()}-${String(data.getMonth() + 1).padStart(2, "0")}`;
+
+    atualizarTextoCompetencia();
+    atualizarBalançoGeral();
+}
+
+function atualizarTextoCompetencia() {
+    const elemento = document.getElementById("textoMesAtual");
+    if (!elemento) return;
+
+    const [ano, mes] = competenciaSelecionada.split("-").map(Number);
+
+    const data = new Date(ano, mes - 1, 1);
+
+    const texto = data.toLocaleDateString("pt-BR", {
+        month: "long",
+        year: "numeric"
+    });
+
+    elemento.textContent =
+        texto.charAt(0).toUpperCase() + texto.slice(1);
+}
+
+
+const btnProximoMes = document.getElementById("btnProximoMes");
+
+if (btnCompetenciaAnterior) {
+    btnCompetenciaAnterior.addEventListener("click", () => {
+        alterarMesFinanceiro(-1);
+    });
+}
+
+if (btnProximoMes) {
+    btnProximoMes.addEventListener("click", () => {
+        alterarMesFinanceiro(1);
+    });
+}
+
+function competenciaParaNumero(competencia) {
+    const [ano, mes] = competencia.split("-").map(Number);
+    return (ano * 12) + mes;
+}
+
+function recorrenciaAtivaNaCompetencia(item, competencia) {
+    if (!item.recorrente) return false;
+
+    const atual = competenciaParaNumero(competencia);
+    const inicio = competenciaParaNumero(item.competenciaInicio);
+
+    if (atual < inicio) return false;
+
+    if (item.competenciaFim) {
+        const fim = competenciaParaNumero(item.competenciaFim);
+
+        if (atual > fim) return false;
+    }
+
+    return true;
+}
+
+
+if (btnMesSeguinte) {
+    btnMesSeguinte.addEventListener("click", () => {
+        alterarMesFinanceiro(1);
+    });
+}
+
+
+if (btnMesAnterior) {
+    btnMesAnterior.addEventListener("click", () => {
+        alterarMesFinanceiro(-1);
+    });
+}
 
 // ========================================
 // 7. MÓDULO: FINANÇAS & BALANÇO (COM BARRA)
 // ========================================
 
 function calcularTotalEntradas() {
-    return entradas.reduce((acc, item) => acc + Number(item.valor), 0);
+    const competencia = obterCompetenciaAtual();
+
+    return entradas
+        .filter(item => item.competencia === competencia)
+        .reduce((acc, item) => acc + Number(item.valor), 0);
 }
 
 function calcularTotalParcelasCartaoMes() {
-    return comprasCartao.reduce((acc, item) => acc + (Number(item.valorTotal) / Number(item.parcelas)), 0);
+    const competencia = obterCompetenciaAtual();
+
+    return comprasCartao
+        .filter(item => compraAtivaNaCompetencia(item, competencia))
+        .reduce(
+            (acc, item) =>
+                acc + (Number(item.valorTotal) / Number(item.parcelas)),
+            0
+        );
+}
+
+
+function obterParcelasCartaoDaCompetencia() {
+    const competencia = obterCompetenciaAtual();
+
+    return comprasCartao
+        .filter(compra => compraAtivaNaCompetencia(compra, competencia))
+        .map(compra => {
+            const [anoInicio, mesInicio] = compra.competencia.split("-").map(Number);
+            const [anoAtual, mesAtual] = competencia.split("-").map(Number);
+
+            const indiceInicio = anoInicio * 12 + (mesInicio - 1);
+            const indiceAtual = anoAtual * 12 + (mesAtual - 1);
+
+            const numeroParcela = indiceAtual - indiceInicio + 1;
+            const valorParcela = Number(compra.valorTotal) / Number(compra.parcelas);
+
+            return {
+                ...compra,
+                numeroParcela,
+                valorParcela
+            };
+        });
+}
+
+
+function compraAtivaNaCompetencia(item, competencia) {
+    if (!item.competencia || !item.parcelas) return false;
+
+    const [anoInicio, mesInicio] = item.competencia.split("-").map(Number);
+    const [anoAtual, mesAtual] = competencia.split("-").map(Number);
+
+    const indiceInicio = anoInicio * 12 + (mesInicio - 1);
+    const indiceAtual = anoAtual * 12 + (mesAtual - 1);
+
+    const parcelaAtual = indiceAtual - indiceInicio + 1;
+
+    return parcelaAtual >= 1 && parcelaAtual <= Number(item.parcelas);
+}
+
+function calcularTotalCategoria(categoria) {
+    const competencia = obterCompetenciaAtual();
+    const itens = gastos[categoria] || [];
+
+    if (categoria === "fixos" || categoria === "assinaturas") {
+        return itens
+            .filter(item =>
+                recorrenciaAtivaNaCompetencia(item, competencia)
+            )
+            .reduce(
+                (acc, item) => acc + Number(item.valor),
+                0
+            );
+    }
+
+    return itens
+        .filter(item => item.competencia === competencia)
+        .reduce(
+            (acc, item) => acc + Number(item.valor),
+            0
+        );
 }
 
 function calcularTotalGastosCategorias() {
+    const competencia = obterCompetenciaAtual();
+
     let total = 0;
-    Object.keys(gastos).forEach(cat => {
-        total += gastos[cat].reduce((acc, item) => acc + Number(item.valor), 0);
+
+    // Gastos normais daquele mês
+    ["mercado", "lazer", "transporte"].forEach(categoria => {
+
+        const itens = gastos[categoria] || [];
+
+        total += itens
+            .filter(item => item.competencia === competencia)
+            .reduce(
+                (acc, item) => acc + Number(item.valor),
+                0
+            );
     });
+
+    // Gastos recorrentes
+    ["fixos", "assinaturas"].forEach(categoria => {
+
+        const itens = gastos[categoria] || [];
+
+        total += itens
+            .filter(item =>
+                recorrenciaAtivaNaCompetencia(
+                    item,
+                    competencia
+                )
+            )
+            .reduce(
+                (acc, item) => acc + Number(item.valor),
+                0
+            );
+    });
+
     return total;
 }
 
@@ -473,6 +727,178 @@ function atualizarBalançoGeral() {
 }
 
 
+function abrirDetalhamentoGastos() {
+    const competencia = obterCompetenciaAtual();
+
+    const nomes = {
+        fixos: "🏠 Gastos Fixos",
+        mercado: "🛒 Mercado",
+        lazer: "🎮 Lazer",
+        transporte: "🚗 Transporte",
+        assinaturas: "🔄 Assinaturas"
+    };
+
+    const categorias = [
+        "fixos",
+        "mercado",
+        "lazer",
+        "transporte",
+        "assinaturas"
+    ];
+
+    let html = "";
+    let total = 0;
+
+    categorias.forEach(categoria => {
+        const itens = gastos[categoria] || [];
+
+        let subtotal = 0;
+
+        if (categoria === "fixos" || categoria === "assinaturas") {
+            subtotal = itens
+                .filter(item =>
+                    recorrenciaAtivaNaCompetencia(item, competencia)
+                )
+                .reduce(
+                    (acc, item) => acc + Number(item.valor),
+                    0
+                );
+        } else {
+            subtotal = itens
+                .filter(item => item.competencia === competencia)
+                .reduce(
+                    (acc, item) => acc + Number(item.valor),
+                    0
+                );
+        }
+
+        total += subtotal;
+
+        html += `
+  <div style="
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    padding:12px 0;
+    border-bottom:1px solid var(--border-color);
+  ">
+    <span>${nomes[categoria]}</span>
+    <strong>${formatarMoeda(subtotal)}</strong>
+  </div>
+`;
+});
+
+const cartoes = calcularTotalParcelasCartaoMes();
+total += cartoes;
+
+html += `
+  <div id="linhaDetalheCartoes" style="
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    padding:12px 0;
+    border-bottom:1px solid var(--border-color);
+  ">
+    <span>💳 Cartões</span>
+    <strong>${formatarMoeda(cartoes)}</strong>
+  </div>
+
+  <div style="
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    padding-top:18px;
+    font-size:17px;
+  ">
+    <strong>Total</strong>
+    <strong>${formatarMoeda(total)}</strong>
+  </div>
+`;
+
+abrirModal("Detalhamento de Gastos", html);
+
+setTimeout(() => {
+    const linhaCartoes = document.getElementById("linhaDetalheCartoes");
+  
+    if (linhaCartoes) {
+      linhaCartoes.style.cursor = "pointer";
+      linhaCartoes.addEventListener("click", () => {
+        window.abrirDetalhamentoCartoes();
+      });
+    }
+  }, 0);
+}
+
+
+window.abrirDetalhamentoCartoes = function() {
+    const parcelas = obterParcelasCartaoDaCompetencia()
+    .sort((a, b) => {
+        const restantesA = a.parcelas - a.numeroParcela;
+        const restantesB = b.parcelas - b.numeroParcela;
+
+        return restantesB - restantesA;
+    });
+
+    let html = "";
+
+    if (parcelas.length === 0) {
+        html = `
+            <p style="text-align:center; opacity:0.6; padding:20px 0;">
+                Nenhuma parcela de cartão nesta competência.
+            </p>
+        `;
+    } else {
+        parcelas.forEach(compra => {
+            html += `
+                <div style="
+                    padding:12px 0;
+                    border-bottom:1px solid var(--border-color);
+                ">
+                    <div style="
+                        display:flex;
+                        justify-content:space-between;
+                        gap:15px;
+                    ">
+                        <strong>${compra.descricao}</strong>
+                        <strong>${formatarMoeda(compra.valorParcela)}</strong>
+                    </div>
+
+                    <small style="opacity:0.65;">
+                        ${compra.cartao} • Parcela ${compra.numeroParcela}/${compra.parcelas}
+                    </small>
+                </div>
+            `;
+        });
+
+        const total = parcelas.reduce(
+            (acc, compra) => acc + compra.valorParcela,
+            0
+        );
+
+        html += `
+            <div style="
+                display:flex;
+                justify-content:space-between;
+                padding-top:18px;
+                font-size:17px;
+            ">
+                <strong>Total dos cartões</strong>
+                <strong>${formatarMoeda(total)}</strong>
+            </div>
+        `;
+    }
+
+    abrirModal("Parcelas do Mês", html);
+};
+
+
+const btnDetalharGastos = document.getElementById("btnDetalharGastos");
+
+if (btnDetalharGastos) {
+    btnDetalharGastos.addEventListener("click", abrirDetalhamentoGastos);
+}
+
+
 // Entradas com Modal
 if (btnEntrada) {
     btnEntrada.addEventListener("click", () => {
@@ -500,9 +926,21 @@ if (btnNovaEntrada) {
 
             if (!desc || isNaN(val) || val <= 0) return alert("Preencha os campos corretamente.");
 
-            entradas.push({ id: Date.now(), descricao: desc, valor: val });
-            localStorage.setItem("meuAppEntradas", JSON.stringify(entradas));
+            entradas.push({
+                id: Date.now(),
+                descricao: desc,
+                valor: val,
+                competencia: obterCompetenciaAtual(),
+                data: new Date().toISOString()
+            });
+            
+            localStorage.setItem(
+                "meuAppEntradas",
+                JSON.stringify(entradas)
+            );
+            
             atualizarListaEntradas();
+            atualizarBalançoGeral();
         });
     });
 }
@@ -510,24 +948,81 @@ if (btnNovaEntrada) {
 function atualizarListaEntradas() {
     const lista = document.getElementById("listaEntradas");
     const total = document.getElementById("totalEntradas");
+
     if (!lista || !total) return;
 
-    lista.innerHTML = "";
-    const totalValor = calcularTotalEntradas();
+    const competencia = obterCompetenciaAtual();
 
-    if (entradas.length === 0) {
-        lista.innerHTML = `<p style="text-align:center; opacity:0.6; padding:1rem;">Nenhuma entrada registrada.</p>`;
+const comprasDoCartao = comprasCartao
+    .filter(c =>
+        c.cartao === cartao &&
+        compraAtivaNaCompetencia(c, competencia)
+    )
+    .sort((a, b) => {
+        const [anoInicioA, mesInicioA] = a.competencia.split("-").map(Number);
+        const [anoInicioB, mesInicioB] = b.competencia.split("-").map(Number);
+        const [anoAtual, mesAtual] = competencia.split("-").map(Number);
+
+        const indiceAtual = anoAtual * 12 + (mesAtual - 1);
+
+        const parcelaAtualA =
+            indiceAtual - (anoInicioA * 12 + (mesInicioA - 1)) + 1;
+
+        const parcelaAtualB =
+            indiceAtual - (anoInicioB * 12 + (mesInicioB - 1)) + 1;
+
+        const restantesA = Number(a.parcelas) - parcelaAtualA;
+        const restantesB = Number(b.parcelas) - parcelaAtualB;
+
+        return restantesB - restantesA;
+    });
+
+    lista.innerHTML = "";
+
+    const totalValor = entradasDoMes.reduce(
+        (acc, item) => acc + Number(item.valor),
+        0
+    );
+
+    if (entradasDoMes.length === 0) {
+
+        lista.innerHTML = `
+            <p style="text-align:center; opacity:0.6; padding:1rem;">
+                Nenhuma entrada registrada neste mês.
+            </p>
+        `;
+
     } else {
-        entradas.forEach(item => {
+
+        entradasDoMes.forEach(item => {
+
             const div = document.createElement("div");
+
             div.className = "lancamento";
+
             div.innerHTML = `
-                <div><strong>${item.descricao}</strong></div>
+                <div>
+                    <strong>${item.descricao}</strong>
+                </div>
+
                 <div style="display:flex; align-items:center; gap:10px;">
-                    <span style="color:var(--success); font-weight:600;">${formatarMoeda(Number(item.valor))}</span>
-                    <button class="botao-excluir" onclick="excluirEntrada(${item.id})">✕</button>
+
+                    <span style="
+                        color:var(--success);
+                        font-weight:600;
+                    ">
+                        ${formatarMoeda(Number(item.valor))}
+                    </span>
+
+                    <button
+                        class="botao-excluir"
+                        onclick="excluirEntrada(${item.id})">
+                        ✕
+                    </button>
+
                 </div>
             `;
+
             lista.appendChild(div);
         });
     }
@@ -590,9 +1085,22 @@ if (btnNovaCompraParcelada) {
                 <input type="number" step="0.01" id="mCompraValor" placeholder="Ex: 1200.00">
             </div>
             <div class="campo-form" style="margin-bottom:12px;">
-                <label>Número de Parcelas</label>
-                <input type="number" id="mCompraParcelas" value="2" min="1">
-            </div>
+    <label>Número de Parcelas</label>
+    <select id="mCompraParcelas">
+        <option value="1">1x</option>
+        <option value="2">2x</option>
+        <option value="3">3x</option>
+        <option value="4">4x</option>
+        <option value="5">5x</option>
+        <option value="6">6x</option>
+        <option value="7">7x</option>
+        <option value="8">8x</option>
+        <option value="9">9x</option>
+        <option value="10">10x</option>
+        <option value="11">11x</option>
+        <option value="12">12x</option>
+    </select>
+</div>
             <div class="campo-form">
                 <label>Selecione o Cartão</label>
                 <select id="mCompraCartao">${opcoesCartoes}</select>
@@ -614,7 +1122,8 @@ if (btnNovaCompraParcelada) {
                 descricao: desc,
                 valorTotal,
                 parcelas,
-                cartao: cartaoSel
+                cartao: cartaoSel,
+                competencia: obterCompetenciaAtual()
             });
 
             localStorage.setItem("meuAppComprasCartao", JSON.stringify(comprasCartao));
@@ -644,24 +1153,82 @@ function renderizarCartoesECompras() {
         bloco.style.padding = "16px";
         bloco.style.marginBottom = "14px";
 
-        const comprasDoCartao = comprasCartao.filter(c => c.cartao === cartao);
+        const competencia = obterCompetenciaAtual();
+
+const comprasDoCartao = comprasCartao.filter(c =>
+    c.cartao === cartao &&
+    compraAtivaNaCompetencia(c, competencia)
+);
         let subtotalCartaoMes = 0;
 
         let comprasHTML = "";
         if (comprasDoCartao.length === 0) {
             comprasHTML = `<p style="font-size:13px; color:var(--text-muted); margin-top:8px;">Nenhuma compra neste cartão.</p>`;
         } else {
-            comprasDoCartao.forEach(compra => {
+            [...comprasDoCartao]
+    .sort((a, b) => {
+        const calcularRestantes = (compra) => {
+            const [anoInicio, mesInicio] = compra.competencia.split("-").map(Number);
+            const [anoAtual, mesAtual] = competencia.split("-").map(Number);
+
+            const indiceInicio = anoInicio * 12 + (mesInicio - 1);
+            const indiceAtual = anoAtual * 12 + (mesAtual - 1);
+
+            const numeroParcela = indiceAtual - indiceInicio + 1;
+            return compra.parcelas - numeroParcela + 1;
+        };
+
+        return calcularRestantes(b) - calcularRestantes(a);
+    })
+    .forEach(compra => {
                 const valorParcela = compra.valorTotal / compra.parcelas;
+            
+                const [anoInicio, mesInicio] = compra.competencia
+                    .split("-")
+                    .map(Number);
+            
+                const [anoAtual, mesAtual] = competencia
+                    .split("-")
+                    .map(Number);
+            
+                const indiceInicio = anoInicio * 12 + (mesInicio - 1);
+                const indiceAtual = anoAtual * 12 + (mesAtual - 1);
+            
+                const numeroParcela = indiceAtual - indiceInicio + 1;
+            
                 subtotalCartaoMes += valorParcela;
 
+                const parcelasRestantes = compra.parcelas - numeroParcela + 1;
+                const saldoRestante = valorParcela * parcelasRestantes;
+            
                 comprasHTML += `
                     <div class="lancamento" style="margin-top:8px;">
                         <div>
                             <strong>${compra.descricao}</strong><br>
-                            <small style="color:var(--text-muted);">${compra.parcelas}x de ${formatarMoeda(valorParcela)}</small>
+                            <small style="color:var(--text-muted);">
+    Parcela ${numeroParcela}/${compra.parcelas} • ${formatarMoeda(valorParcela)}<br>
+    Restam ${parcelasRestantes} parcela${parcelasRestantes !== 1 ? "s" : ""} • 
+    Saldo: ${formatarMoeda(saldoRestante)}
+</small>
                         </div>
-                        <button class="botao-excluir" onclick="excluirCompraCartao(${compra.id})">✕</button>
+            
+                        <div style="display:flex; gap:8px; align-items:center;">
+    <button
+        onclick="editarCompraCartao(${compra.id})"
+        style="
+            border:none;
+            background:transparent;
+            cursor:pointer;
+            font-size:16px;
+        "
+        title="Editar"
+    >✏️</button>
+
+    <button
+        class="botao-excluir"
+        onclick="excluirCompraCartao(${compra.id})"
+    >×</button>
+</div>
                     </div>
                 `;
             });
@@ -681,6 +1248,89 @@ function renderizarCartoesECompras() {
         container.appendChild(bloco);
     });
 }
+
+window.editarCompraCartao = function(id) {
+    const compra = comprasCartao.find(c => c.id === id);
+    if (!compra) return;
+
+    const opcoesCartoes = cartoes.map(c =>
+        `<option value="${c}" ${c === compra.cartao ? "selected" : ""}>${c}</option>`
+    ).join("");
+
+    const html = `
+        <div class="campo-form" style="margin-bottom:12px;">
+            <label>Descrição da Compra</label>
+            <input
+                type="text"
+                id="mEditarCompraDesc"
+                value="${compra.descricao}"
+            >
+        </div>
+
+        <div class="campo-form" style="margin-bottom:12px;">
+            <label>Valor TOTAL (R$)</label>
+            <input
+                type="number"
+                step="0.01"
+                id="mEditarCompraValor"
+                value="${compra.valorTotal}"
+            >
+        </div>
+
+        <div class="campo-form" style="margin-bottom:12px;">
+            <label>Número de Parcelas</label>
+            <select id="mEditarCompraParcelas">
+                ${Array.from({ length: 12 }, (_, i) => {
+                    const n = i + 1;
+                    return `<option value="${n}" ${n === compra.parcelas ? "selected" : ""}>${n}x</option>`;
+                }).join("")}
+            </select>
+        </div>
+
+        <div class="campo-form">
+            <label>Cartão</label>
+            <select id="mEditarCompraCartao">
+                ${opcoesCartoes}
+            </select>
+        </div>
+    `;
+
+    abrirModal("Editar Compra", html, () => {
+        const desc = document.getElementById("mEditarCompraDesc")?.value.trim();
+        const valorTotal = parseFloat(
+            document.getElementById("mEditarCompraValor")?.value
+        );
+        const parcelas = parseInt(
+            document.getElementById("mEditarCompraParcelas")?.value,
+            10
+        );
+        const cartao = document.getElementById("mEditarCompraCartao")?.value;
+
+        if (
+            !desc ||
+            isNaN(valorTotal) ||
+            valorTotal <= 0 ||
+            isNaN(parcelas) ||
+            parcelas <= 0 ||
+            !cartao
+        ) {
+            return alert("Dados incorretos.");
+        }
+
+        compra.descricao = desc;
+        compra.valorTotal = valorTotal;
+        compra.parcelas = parcelas;
+        compra.cartao = cartao;
+
+        localStorage.setItem(
+            "meuAppComprasCartao",
+            JSON.stringify(comprasCartao)
+        );
+
+        renderizarCartoesECompras();
+        atualizarBalancoGeral();
+    });
+};
 
 window.excluirCartao = function(nomeCartao) {
     if (!confirm(`Deseja apagar o cartão "${nomeCartao}"?`)) return;
@@ -725,18 +1375,66 @@ function abrirCategoriaGasto(categoriaKey) {
 if (btnNovoGastoCategoria) {
     btnNovoGastoCategoria.addEventListener("click", () => {
         if (!categoriaAtualGasto) return;
+        
         const config = configCategorias[categoriaAtualGasto];
 
-        const html = `
-            <div class="campo-form" style="margin-bottom:12px;">
-                <label>Descrição</label>
-                <input type="text" id="mGastoDesc" placeholder="Ex: Compra quinzenal">
-            </div>
-            <div class="campo-form">
-                <label>Valor (R$)</label>
-                <input type="number" step="0.01" id="mGastoValor" placeholder="Ex: 150.00">
-            </div>
-        `;
+        const categoriaRecorrente =
+    categoriaAtualGasto === "fixos" ||
+    categoriaAtualGasto === "assinaturas";
+
+    const html = `
+    <div class="campo-form" style="margin-bottom:12px;">
+        <label>Descrição</label>
+        <input
+            type="text"
+            id="mGastoDesc"
+            placeholder="${
+                categoriaRecorrente
+                    ? "Ex: Internet, Netflix"
+                    : "Ex: Compra quinzenal"
+            }"
+        >
+    </div>
+
+    <div class="campo-form">
+        <label>Valor (R$)</label>
+        <input
+            type="number"
+            step="0.01"
+            id="mGastoValor"
+            placeholder="Ex: 150.00"
+        >
+    </div>
+
+    ${
+        categoriaRecorrente
+            ? `
+                <div
+                    style="
+                        margin-top:14px;
+                        padding:12px;
+                        background:var(--bg-app);
+                        border-radius:12px;
+                    "
+                >
+                    <strong style="font-size:13px;">
+                        🔄 Cobrança recorrente
+                    </strong>
+
+                    <p
+                        style="
+                            font-size:12px;
+                            color:var(--text-muted);
+                            margin-top:4px;
+                        "
+                    >
+                        Será repetida automaticamente nos próximos meses.
+                    </p>
+                </div>
+            `
+            : ""
+    }
+`;
 
         abrirModal(`Novo Gasto em ${config.titulo}`, html, () => {
             const desc = document.getElementById("mGastoDesc")?.value.trim();
@@ -744,7 +1442,34 @@ if (btnNovoGastoCategoria) {
 
             if (!desc || isNaN(val) || val <= 0) return alert("Preencha os campos corretamente.");
 
-            gastos[categoriaAtualGasto].push({ id: Date.now(), descricao: desc, valor: val });
+            if (categoriaRecorrente) {
+
+                gastos[categoriaAtualGasto].push({
+                    id: Date.now(),
+                    descricao: desc,
+                    valor: val,
+            
+                    recorrente: true,
+            
+                    competenciaInicio: obterCompetenciaAtual(),
+                    competenciaFim: null,
+            
+                    dataCriacao: new Date().toISOString()
+                });
+            
+            } else {
+            
+                gastos[categoriaAtualGasto].push({
+                    id: Date.now(),
+                    descricao: desc,
+                    valor: val,
+            
+                    competencia: obterCompetenciaAtual(),
+            
+                    data: new Date().toISOString()
+                });
+            
+            }
             localStorage.setItem("meuAppGastos", JSON.stringify(gastos));
             atualizarListaGastosCategoria();
         });
@@ -756,25 +1481,72 @@ function atualizarListaGastosCategoria() {
 
     const lista = document.getElementById("listaGastosCategoria");
     const elTotal = document.getElementById("totalCategoriaGasto");
+
     if (!lista || !elTotal) return;
 
+    const competencia = obterCompetenciaAtual();
+
+    const categoriaRecorrente =
+        categoriaAtualGasto === "fixos" ||
+        categoriaAtualGasto === "assinaturas";
+
+    const todosItens = gastos[categoriaAtualGasto] || [];
+
+    let itens;
+
+    if (categoriaRecorrente) {
+        itens = todosItens.filter(item =>
+            recorrenciaAtivaNaCompetencia(item, competencia)
+        );
+    } else {
+        itens = todosItens.filter(item =>
+            item.competencia === competencia
+        );
+    }
+
     lista.innerHTML = "";
-    const itens = gastos[categoriaAtualGasto] || [];
-    const total = itens.reduce((acc, item) => acc + Number(item.valor), 0);
+
+    const total = itens.reduce(
+        (acc, item) => acc + Number(item.valor),
+        0
+    );
 
     if (itens.length === 0) {
-        lista.innerHTML = `<p style="text-align:center; opacity:0.6; padding:1rem;">Nenhum gasto registrado.</p>`;
+        lista.innerHTML = `
+            <p style="text-align:center; opacity:0.6; padding:1rem;">
+                Nenhum gasto registrado neste mês.
+            </p>
+        `;
     } else {
         itens.forEach(item => {
             const div = document.createElement("div");
             div.className = "lancamento";
+
+            const indicadorRecorrente = item.recorrente
+                ? `<small style="color:var(--text-muted);">🔄 Recorrente</small>`
+                : "";
+
             div.innerHTML = `
-                <div><strong>${item.descricao}</strong></div>
+                <div>
+                    <strong>${item.descricao}</strong>
+                    <br>
+                    ${indicadorRecorrente}
+                </div>
+
                 <div style="display:flex; align-items:center; gap:10px;">
-                    <span style="font-weight:600;">${formatarMoeda(Number(item.valor))}</span>
-                    <button class="botao-excluir" onclick="excluirGastoCategoria(${item.id})">✕</button>
+                    <span style="font-weight:600;">
+                        ${formatarMoeda(Number(item.valor))}
+                    </span>
+
+                    <button
+    class="botao-excluir"
+    onclick="excluirGastoCategoria(${item.id})"
+>
+    ${item.recorrente ? "Encerrar" : "×"}
+</button>
                 </div>
             `;
+
             lista.appendChild(div);
         });
     }
@@ -784,9 +1556,45 @@ function atualizarListaGastosCategoria() {
 
 window.excluirGastoCategoria = function(id) {
     if (!categoriaAtualGasto) return;
-    gastos[categoriaAtualGasto] = gastos[categoriaAtualGasto].filter(item => item.id !== id);
-    localStorage.setItem("meuAppGastos", JSON.stringify(gastos));
+
+    const itens = gastos[categoriaAtualGasto] || [];
+    const item = itens.find(item => item.id === id);
+
+    if (!item) return;
+
+    // FIXOS E ASSINATURAS: encerra a recorrência
+    if (item.recorrente) {
+        const competenciaAtual = obterCompetenciaAtual();
+
+        const confirmar = confirm(
+            `Deseja encerrar "${item.descricao}" a partir desta competência?\n\n` +
+            `O histórico dos meses anteriores será mantido.`
+        );
+
+        if (!confirmar) return;
+
+        item.competenciaFim = competenciaAtual;
+    }
+
+    // GASTOS NORMAIS: exclui normalmente
+    else {
+        const confirmar = confirm(
+            `Deseja excluir "${item.descricao}"?`
+        );
+
+        if (!confirmar) return;
+
+        gastos[categoriaAtualGasto] =
+            itens.filter(gasto => gasto.id !== id);
+    }
+
+    localStorage.setItem(
+        "meuAppGastos",
+        JSON.stringify(gastos)
+    );
+
     atualizarListaGastosCategoria();
+    atualizarBalancoGeral();
 };
 
 
@@ -893,5 +1701,8 @@ if ("serviceWorker" in navigator) {
 
 document.addEventListener("DOMContentLoaded", () => {
     mostrarTela(telaInicio, tabInicio);
+
+    atualizarTextoCompetencia();
+
     console.log("App com layout nativo iOS carregado!");
 });
