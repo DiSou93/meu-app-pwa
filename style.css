@@ -278,7 +278,8 @@
   }
   
   .campo-form input,
-  .campo-form select {
+  .campo-form select,
+  .campo-form textarea {
     width: 100%;
     padding: 12px 14px;
     border-radius: var(--radius-input);
@@ -288,6 +289,20 @@
     color: var(--text-main);
     outline: none;
     font-family: inherit;
+  }
+
+  .campo-form textarea {
+    width: 100%;
+    padding: 12px 14px;
+    border-radius: var(--radius-input);
+    border: 1px solid var(--border-color);
+    background: var(--bg-app);
+    font-size: 15px;
+    line-height: 1.4;
+    color: var(--text-main);
+    outline: none;
+    font-family: inherit;
+    resize: vertical;
   }
   
   /* ========================================

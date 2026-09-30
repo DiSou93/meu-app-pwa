@@ -294,12 +294,43 @@
             </header>
         
             <main>
-                <section class="formulario-qualificacao">
-                    <h2>Ocorrências salvas</h2>
-                    <div id="listaReds" class="lista-lancamentos">
-                        <p>Nenhum rascunho salvo.</p>
+                <form id="formReds" class="formulario-qualificacao">
+                    <h2 id="tituloFormReds">Novo rascunho</h2>
+                    <div class="campo-form">
+                        <label for="rNatureza">Natureza / assunto</label>
+                        <input type="text" id="rNatureza" placeholder="Ex.: acidente de trânsito" required>
                     </div>
-                </section>
+                    <div class="campo-form">
+                        <label for="rData">Data do fato</label>
+                        <input type="date" id="rData">
+                    </div>
+                    <div class="campo-form">
+                        <label for="rHora">Horário aproximado</label>
+                        <input type="time" id="rHora">
+                    </div>
+                    <div class="campo-form">
+                        <label for="rLocal">Local</label>
+                        <input type="text" id="rLocal" placeholder="Rua, bairro, cidade">
+                    </div>
+                    <div class="campo-form">
+                        <label for="rEnvolvidos">Envolvidos / veículos (resumo)</label>
+                        <textarea id="rEnvolvidos" rows="3" placeholder="Anote os dados necessários para completar depois"></textarea>
+                    </div>
+                    <div class="campo-form">
+                        <label for="rRelato">Relato-base</label>
+                        <textarea id="rRelato" rows="7" placeholder="Descreva os fatos em ordem. O texto fica salvo somente neste aparelho." required></textarea>
+                    </div>
+                    <div class="acoes-formulario">
+                        <button type="submit" id="btnSalvarReds" class="botao-principal">💾 Salvar rascunho</button>
+                        <button type="button" id="btnLimparReds" class="botao-secundario">Limpar formulário</button>
+                    </div>
+                </form>
+
+                <hr style="margin: 24px 0; border: none; border-top: 1px solid var(--border-color);">
+                <h2>Ocorrências salvas</h2>
+                <div id="listaReds" class="lista-lancamentos" style="margin-top:14px;">
+                    <p>Nenhum rascunho salvo.</p>
+                </div>
             </main>
         </section>
         

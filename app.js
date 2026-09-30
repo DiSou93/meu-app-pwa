@@ -11,6 +11,7 @@ let cartoes = JSON.parse(localStorage.getItem("meuAppCartoes")) || ["Nubank"];
 let comprasCartao = JSON.parse(localStorage.getItem("meuAppComprasCartao")) || [];
 let qualificacoesSalvas = JSON.parse(localStorage.getItem("meuAppQualificacoes")) || [];
 let turnosSalvos = JSON.parse(localStorage.getItem("meuAppTurnos")) || [];
+let redsSalvos = JSON.parse(localStorage.getItem("meuAppReds")) || [];
 
 let gastos = JSON.parse(localStorage.getItem("meuAppGastos")) || {
     mercado: [],
@@ -173,6 +174,7 @@ if (btnMeuTurno) {
 if (btnHistoricoReds) {
     btnHistoricoReds.addEventListener("click", () => {
         mostrarTela(telaHistoricoReds, tabTrabalho);
+        renderizarReds();
     });
 }
 
@@ -361,7 +363,128 @@ window.excluirQualificacao = function(id) {
 
 
 // ========================================
-// 6. MÓDULO: MEU TURNO
+// 6. MÓDULO: HISTÓRICO REDS (RASCUNHOS OFFLINE)
+// ========================================
+
+const formReds = document.getElementById("formReds");
+let redsEmEdicaoId = null;
+
+function obterDadosRedsForm() {
+    return {
+        natureza: document.getElementById("rNatureza")?.value.trim() || "",
+        data: document.getElementById("rData")?.value || "",
+        hora: document.getElementById("rHora")?.value || "",
+        local: document.getElementById("rLocal")?.value.trim() || "",
+        envolvidos: document.getElementById("rEnvolvidos")?.value.trim() || "",
+        relato: document.getElementById("rRelato")?.value.trim() || ""
+    };
+}
+
+function gerarTextoReds(d) {
+    return `*RASCUNHO PARA REDS*
+Natureza/assunto: ${d.natureza || "N/I"}
+Data: ${d.data || "N/I"}
+Horário: ${d.hora || "N/I"}
+Local: ${d.local || "N/I"}
+Envolvidos/veículos: ${d.envolvidos || "N/I"}
+
+Relato-base:
+${d.relato || "N/I"}`;
+}
+
+function renderizarReds() {
+    const lista = document.getElementById("listaReds");
+    if (!lista) return;
+    lista.replaceChildren();
+    if (!redsSalvos.length) {
+        const vazio = document.createElement("p");
+        vazio.textContent = "Nenhum rascunho salvo.";
+        lista.appendChild(vazio);
+        return;
+    }
+
+    redsSalvos.forEach(item => {
+        const card = document.createElement("div");
+        card.className = "lancamento";
+        card.style.flexDirection = "column";
+        card.style.alignItems = "stretch";
+        card.style.gap = "8px";
+        const titulo = document.createElement("strong");
+        titulo.textContent = item.natureza || "Ocorrência sem título";
+        const resumo = document.createElement("p");
+        resumo.style.cssText = "font-size:13px;color:var(--text-muted);white-space:pre-wrap;";
+        resumo.textContent = `${item.data || "Data não informada"}${item.hora ? ` • ${item.hora}` : ""}${item.local ? ` • ${item.local}` : ""}`;
+        const acoes = document.createElement("div");
+        acoes.style.cssText = "display:flex;flex-wrap:wrap;gap:8px;";
+        [["Editar", () => editarReds(item.id)], ["Copiar texto", () => copiarTextoFormatado(gerarTextoReds(item), "Texto do rascunho copiado!")], ["Excluir", () => excluirReds(item.id)]].forEach(([rotulo, acao]) => {
+            const botao = document.createElement("button");
+            botao.type = "button";
+            botao.className = rotulo === "Excluir" ? "botao-excluir" : "botao-secundario";
+            botao.textContent = rotulo;
+            botao.style.padding = "8px 12px";
+            botao.addEventListener("click", acao);
+            acoes.appendChild(botao);
+        });
+        card.append(titulo, resumo, acoes);
+        lista.appendChild(card);
+    });
+}
+
+function editarReds(id) {
+    const item = redsSalvos.find(r => r.id === id);
+    if (!item || !formReds) return;
+    document.getElementById("rNatureza").value = item.natureza || "";
+    document.getElementById("rData").value = item.data || "";
+    document.getElementById("rHora").value = item.hora || "";
+    document.getElementById("rLocal").value = item.local || "";
+    document.getElementById("rEnvolvidos").value = item.envolvidos || "";
+    document.getElementById("rRelato").value = item.relato || "";
+    redsEmEdicaoId = id;
+    document.getElementById("tituloFormReds").textContent = "Editar rascunho";
+    document.getElementById("btnSalvarReds").textContent = "💾 Atualizar rascunho";
+    formReds.scrollIntoView({ behavior: "smooth", block: "start" });
+}
+
+function excluirReds(id) {
+    if (!confirm("Excluir este rascunho de ocorrência?")) return;
+    redsSalvos = redsSalvos.filter(item => item.id !== id);
+    localStorage.setItem("meuAppReds", JSON.stringify(redsSalvos));
+    if (redsEmEdicaoId === id) limparFormReds();
+    renderizarReds();
+}
+
+function limparFormReds() {
+    formReds?.reset();
+    redsEmEdicaoId = null;
+    const titulo = document.getElementById("tituloFormReds");
+    const botao = document.getElementById("btnSalvarReds");
+    if (titulo) titulo.textContent = "Novo rascunho";
+    if (botao) botao.textContent = "💾 Salvar rascunho";
+}
+
+if (formReds) {
+    formReds.addEventListener("submit", event => {
+        event.preventDefault();
+        const dados = obterDadosRedsForm();
+        if (!dados.natureza || !dados.relato) return alert("Preencha a natureza/assunto e o relato-base.");
+        if (redsEmEdicaoId !== null) {
+            const indice = redsSalvos.findIndex(item => item.id === redsEmEdicaoId);
+            if (indice >= 0) redsSalvos[indice] = { ...redsSalvos[indice], ...dados };
+        } else {
+            redsSalvos.unshift({ id: Date.now(), ...dados });
+        }
+        localStorage.setItem("meuAppReds", JSON.stringify(redsSalvos));
+        limparFormReds();
+        renderizarReds();
+        alert("Rascunho salvo neste aparelho.");
+    });
+}
+
+document.getElementById("btnLimparReds")?.addEventListener("click", limparFormReds);
+
+
+// ========================================
+// 7. MÓDULO: MEU TURNO
 // ========================================
 
 const formMeuTurno = document.getElementById("formMeuTurno");
@@ -622,7 +745,7 @@ function recorrenciaAtivaNaCompetencia(item, competencia) {
 
 
 // ========================================
-// 7. MÓDULO: FINANÇAS & BALANÇO (COM BARRA)
+// 8. MÓDULO: FINANÇAS & BALANÇO (COM BARRA)
 // ========================================
 
 function calcularTotalEntradas() {
@@ -1721,7 +1844,7 @@ function aplicarOrdemSalvaFinancas() {
 
 
 // ========================================
-// 8. MÓDULO: CONFIGURAÇÕES & BACKUP
+// 9. MÓDULO: CONFIGURAÇÕES & BACKUP
 // ========================================
 
 const btnExportarBackup = document.getElementById("btnExportarBackup");
@@ -1738,6 +1861,7 @@ if (btnExportarBackup) {
             gastos: JSON.parse(localStorage.getItem("meuAppGastos")) || {},
             qualificacoes: JSON.parse(localStorage.getItem("meuAppQualificacoes")) || [],
             turnos: JSON.parse(localStorage.getItem("meuAppTurnos")) || [],
+            reds: JSON.parse(localStorage.getItem("meuAppReds")) || [],
             turnoAtivo: JSON.parse(localStorage.getItem("meuAppTurnoAtivo")) || null,
             dataExportacao: new Date().toISOString(),
             ordemFinancas: JSON.parse(localStorage.getItem("meuAppOrdemFinancas")) || [
@@ -1775,6 +1899,7 @@ if (btnImportarBackup && inputImportarBackup) {
                     if (dados.gastos) localStorage.setItem("meuAppGastos", JSON.stringify(dados.gastos));
                     if (dados.qualificacoes) localStorage.setItem("meuAppQualificacoes", JSON.stringify(dados.qualificacoes));
                     if (dados.turnos) localStorage.setItem("meuAppTurnos", JSON.stringify(dados.turnos));
+                    if (Array.isArray(dados.reds)) localStorage.setItem("meuAppReds", JSON.stringify(dados.reds));
                     if (Object.prototype.hasOwnProperty.call(dados, "turnoAtivo")) {
                         if (dados.turnoAtivo) {
                             localStorage.setItem("meuAppTurnoAtivo", JSON.stringify(dados.turnoAtivo));
@@ -1809,7 +1934,7 @@ if (btnResetarDados) {
 
 
 // ========================================
-// 9. REGISTRO DE SERVICE WORKER & INICIALIZAÇÃO
+// 10. REGISTRO DE SERVICE WORKER & INICIALIZAÇÃO
 // ========================================
 
 if ("serviceWorker" in navigator) {
