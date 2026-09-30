@@ -13,6 +13,8 @@ let qualificacoesSalvas = JSON.parse(localStorage.getItem("meuAppQualificacoes")
 let turnosSalvos = JSON.parse(localStorage.getItem("meuAppTurnos")) || [];
 let redsSalvos = JSON.parse(localStorage.getItem("meuAppReds")) || [];
 let veiculosSalvos = JSON.parse(localStorage.getItem("meuAppVeiculos")) || [];
+let fichasAcademia = JSON.parse(localStorage.getItem("meuAppFichasAcademia")) || [];
+let modulosOcultos = JSON.parse(localStorage.getItem("meuAppModulosOcultos")) || [];
 
 let gastos = JSON.parse(localStorage.getItem("meuAppGastos")) || {
     mercado: [],
@@ -52,6 +54,7 @@ const telaTrabalho = document.getElementById("telaTrabalho");
 const telaQualificacao = document.getElementById("telaQualificacao");
 const telaMeuTurno = document.getElementById("telaMeuTurno");
 const telaFinancas = document.getElementById("telaFinancas");
+const telaAcademia = document.getElementById("telaAcademia");
 const telaEntradas = document.getElementById("telaEntradas");
 const telaCartao = document.getElementById("telaCartao");
 const telaGastosGenerica = document.getElementById("telaGastosGenerica");
@@ -63,12 +66,13 @@ const todasTelas = [
     telaInicio, telaTrabalho, telaQualificacao, telaMeuTurno,
     telaHistoricoReds, telaVeiculos,
     telaFinancas, telaEntradas, telaCartao, telaGastosGenerica,
-    telaConfiguracoes
+    telaAcademia, telaConfiguracoes
 ];
 
 // Botões Principais da Tela Inicial
 const btnTrabalho = document.getElementById("btnTrabalho");
 const btnFinancas = document.getElementById("btnFinancas");
+const btnAcademia = document.getElementById("btnAcademia");
 const btnConfiguracoes = document.getElementById("btnConfiguracoes");
 
 // Botões do Submenu Trabalho
@@ -103,8 +107,9 @@ const btnCompetenciaAnterior = document.getElementById("btnCompetenciaAnterior")
 const tabInicio = document.getElementById("tabInicio");
 const tabTrabalho = document.getElementById("tabTrabalho");
 const tabFinancas = document.getElementById("tabFinancas");
+const tabAcademia = document.getElementById("tabAcademia");
 const tabConfiguracoes = document.getElementById("tabConfiguracoes");
-const todasTabs = [tabInicio, tabTrabalho, tabFinancas, tabConfiguracoes];
+const todasTabs = [tabInicio, tabTrabalho, tabFinancas, tabAcademia, tabConfiguracoes];
 
 // Modal Bottom Sheet
 const modalOverlay = document.getElementById("modalOverlay");
@@ -137,6 +142,10 @@ function mostrarTela(telaAlvo, tabAtiva) {
 // Eventos da Tab Bar
 if (tabInicio) tabInicio.addEventListener("click", () => mostrarTela(telaInicio, tabInicio));
 if (tabTrabalho) tabTrabalho.addEventListener("click", () => mostrarTela(telaTrabalho, tabTrabalho));
+if (tabAcademia) tabAcademia.addEventListener("click", () => {
+    mostrarTela(telaAcademia, tabAcademia);
+    renderizarAcademia();
+});
 if (tabFinancas) {
     tabFinancas.addEventListener("click", () => {
         mostrarTela(telaFinancas, tabFinancas);
@@ -148,6 +157,10 @@ if (tabConfiguracoes) tabConfiguracoes.addEventListener("click", () => mostrarTe
 
 // Navegação Interna
 if (btnTrabalho) btnTrabalho.addEventListener("click", () => mostrarTela(telaTrabalho, tabTrabalho));
+if (btnAcademia) btnAcademia.addEventListener("click", () => {
+    mostrarTela(telaAcademia, tabAcademia);
+    renderizarAcademia();
+});
 if (btnFinancas) {
     btnFinancas.addEventListener("click", () => {
         mostrarTela(telaFinancas, tabFinancas);
@@ -239,21 +252,138 @@ if (btnModalConfirmar) {
 
 
 // ========================================
+// MÓDULO: ACADEMIA E CONTROLE DE CARGAS
+// ========================================
+const academiaConteudo = document.getElementById("academiaConteudo");
+const btnNovaFichaAcademia = document.getElementById("btnNovaFichaAcademia");
+let academiaSelecionadaFichaId = null;
+
+function escaparHTMLAcademia(valor) {
+    return String(valor ?? "").replace(/[&<>"']/g, caractere => ({
+        "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"
+    })[caractere]);
+}
+
+function salvarFichasAcademia() {
+    localStorage.setItem("meuAppFichasAcademia", JSON.stringify(fichasAcademia));
+}
+
+function gerarIdAcademia() {
+    return window.crypto?.randomUUID?.() || `${Date.now()}-${Math.random().toString(16).slice(2)}`;
+}
+
+function fichaAcademiaSelecionada() {
+    return fichasAcademia.find(ficha => ficha.id === academiaSelecionadaFichaId) || null;
+}
+
+function renderizarAcademia() {
+    if (!academiaConteudo) return;
+    if (!fichasAcademia.length) {
+        academiaSelecionadaFichaId = null;
+        academiaConteudo.innerHTML = '<section class="academia-vazio"><div>🏋️</div><h3>Suas fichas aparecerão aqui</h3><p>Crie uma ficha, por exemplo, “Ficha A” ou “Peito e bíceps”, e adicione os exercícios.</p></section>';
+        return;
+    }
+    if (!fichasAcademia.some(f => f.id === academiaSelecionadaFichaId)) academiaSelecionadaFichaId = fichasAcademia[0].id;
+    const ficha = fichaAcademiaSelecionada();
+    const abas = fichasAcademia.map(f => `<button class="academia-aba ${f.id === ficha.id ? "ativa" : ""}" data-ficha-id="${escaparHTMLAcademia(f.id)}">${escaparHTMLAcademia(f.nome)}</button>`).join("");
+    const exercicios = (ficha.exercicios || []).map(ex => {
+        const historico = (ex.historico || []).slice(-4).reverse();
+        return `<article class="academia-exercicio">
+            <div class="academia-exercicio-topo"><div><h3>${escaparHTMLAcademia(ex.nome)}</h3><p>${Number(ex.series) || 0} séries × ${escaparHTMLAcademia(ex.repeticoes || "—")} repetições</p></div><strong>${Number(ex.carga) || 0} kg</strong></div>
+            ${historico.length ? `<details class="academia-historico"><summary>Histórico de cargas (${(ex.historico || []).length})</summary><ul>${historico.map(item => `<li><span>${escaparHTMLAcademia(item.data)}</span><strong>${Number(item.carga) || 0} kg</strong></li>`).join("")}</ul></details>` : ""}
+            <div class="academia-acoes-exercicio"><button class="botao-secundario" data-acao="carga" data-exercicio-id="${escaparHTMLAcademia(ex.id)}">Registrar carga</button><button class="botao-secundario" data-acao="editar-exercicio" data-exercicio-id="${escaparHTMLAcademia(ex.id)}">Editar</button><button class="botao-excluir" data-acao="excluir-exercicio" data-exercicio-id="${escaparHTMLAcademia(ex.id)}">Excluir</button></div>
+        </article>`;
+    }).join("");
+    academiaConteudo.innerHTML = `<div class="academia-abas" role="tablist">${abas}</div>
+        <section class="academia-ficha">
+            <div class="academia-ficha-topo"><div><h2>${escaparHTMLAcademia(ficha.nome)}</h2><p>${(ficha.exercicios || []).length} exercício(s)</p></div><div class="academia-acoes-ficha"><button class="botao-secundario" data-acao="renomear-ficha">Renomear</button><button class="botao-excluir" data-acao="excluir-ficha">Excluir ficha</button></div></div>
+            <button class="botao-principal" data-acao="novo-exercicio">＋ Adicionar exercício</button>
+            <div class="academia-lista-exercicios">${exercicios || '<p class="academia-vazio-menor">Ainda não há exercícios nesta ficha.</p>'}</div>
+        </section>`;
+}
+
+function abrirModalFichaAcademia(ficha = null) {
+    const nome = ficha?.nome || "";
+    abrirModal(ficha ? "Renomear ficha" : "Criar ficha", `<div class="campo-form"><label for="academiaNomeFicha">Nome da ficha</label><input id="academiaNomeFicha" maxlength="50" value="${escaparHTMLAcademia(nome)}" placeholder="Ex.: Ficha A ou Peito e bíceps" required></div>`, () => {
+        const campo = document.getElementById("academiaNomeFicha");
+        const valor = campo?.value.trim();
+        if (!valor) { alert("Digite um nome para a ficha."); return; }
+        if (ficha) ficha.nome = valor;
+        else {
+            const novaFicha = { id: gerarIdAcademia(), nome: valor, exercicios: [] };
+            fichasAcademia.push(novaFicha);
+            academiaSelecionadaFichaId = novaFicha.id;
+        }
+        salvarFichasAcademia(); renderizarAcademia();
+    });
+}
+
+function abrirModalExercicioAcademia(exercicio = null) {
+    const ex = exercicio || { nome: "", series: 3, repeticoes: "10", carga: 0 };
+    abrirModal(exercicio ? "Editar exercício" : "Adicionar exercício", `<div class="academia-form-grid">
+        <div class="campo-form academia-campo-largo"><label for="academiaNomeExercicio">Exercício</label><input id="academiaNomeExercicio" maxlength="70" value="${escaparHTMLAcademia(ex.nome)}" placeholder="Ex.: Supino reto" required></div>
+        <div class="campo-form"><label for="academiaSeries">Número de séries</label><input id="academiaSeries" type="number" min="1" max="30" step="1" value="${Number(ex.series) || 3}" inputmode="numeric"></div>
+        <div class="campo-form"><label for="academiaRepeticoes">Repetições</label><input id="academiaRepeticoes" maxlength="20" value="${escaparHTMLAcademia(ex.repeticoes)}" placeholder="Ex.: 8–10"></div>
+        <div class="campo-form academia-campo-largo"><label for="academiaCarga">Carga atual (kg)</label><input id="academiaCarga" type="number" min="0" max="999" step="0.25" value="${Number(ex.carga) || 0}" inputmode="decimal"></div>
+        </div>`, () => {
+        const nome = document.getElementById("academiaNomeExercicio")?.value.trim();
+        const series = Number(document.getElementById("academiaSeries")?.value);
+        const repeticoes = document.getElementById("academiaRepeticoes")?.value.trim();
+        const carga = Number(document.getElementById("academiaCarga")?.value);
+        if (!nome || !Number.isInteger(series) || series < 1 || !repeticoes || !Number.isFinite(carga) || carga < 0) { alert("Confira o nome, as séries, as repetições e a carga."); return; }
+        const ficha = fichaAcademiaSelecionada();
+        if (!ficha) return;
+        if (exercicio) {
+            if (Number(exercicio.carga) !== carga) exercicio.historico = [...(exercicio.historico || []), { data: new Date().toLocaleString("pt-BR"), carga }];
+            Object.assign(exercicio, { nome, series, repeticoes, carga });
+        } else {
+            ficha.exercicios = ficha.exercicios || [];
+            ficha.exercicios.push({ id: gerarIdAcademia(), nome, series, repeticoes, carga, historico: carga > 0 ? [{ data: new Date().toLocaleString("pt-BR"), carga }] : [] });
+        }
+        salvarFichasAcademia(); renderizarAcademia();
+    });
+}
+
+function abrirModalCargaAcademia(exercicio) {
+    abrirModal("Registrar carga", `<p class="academia-ajuda-modal">${escaparHTMLAcademia(exercicio.nome)} · carga atual: ${Number(exercicio.carga) || 0} kg</p><div class="campo-form"><label for="academiaNovaCarga">Nova carga (kg)</label><input id="academiaNovaCarga" type="number" min="0" max="999" step="0.25" value="${Number(exercicio.carga) || 0}" inputmode="decimal"></div>`, () => {
+        const carga = Number(document.getElementById("academiaNovaCarga")?.value);
+        if (!Number.isFinite(carga) || carga < 0) { alert("Digite uma carga válida."); return; }
+        exercicio.carga = carga;
+        exercicio.historico = [...(exercicio.historico || []), { data: new Date().toLocaleString("pt-BR"), carga }];
+        salvarFichasAcademia(); renderizarAcademia();
+    });
+}
+
+btnNovaFichaAcademia?.addEventListener("click", () => abrirModalFichaAcademia());
+academiaConteudo?.addEventListener("click", event => {
+    const aba = event.target.closest("[data-ficha-id]");
+    if (aba) { academiaSelecionadaFichaId = aba.dataset.fichaId; renderizarAcademia(); return; }
+    const botao = event.target.closest("[data-acao]");
+    if (!botao) return;
+    const ficha = fichaAcademiaSelecionada();
+    const exercicio = ficha?.exercicios?.find(item => item.id === botao.dataset.exercicioId);
+    switch (botao.dataset.acao) {
+        case "novo-exercicio": abrirModalExercicioAcademia(); break;
+        case "renomear-ficha": abrirModalFichaAcademia(ficha); break;
+        case "excluir-ficha": if (confirm(`Excluir a ficha “${ficha.nome}” e seus exercícios?`)) { fichasAcademia = fichasAcademia.filter(item => item.id !== ficha.id); academiaSelecionadaFichaId = fichasAcademia[0]?.id || null; salvarFichasAcademia(); renderizarAcademia(); } break;
+        case "editar-exercicio": if (exercicio) abrirModalExercicioAcademia(exercicio); break;
+        case "carga": if (exercicio) abrirModalCargaAcademia(exercicio); break;
+        case "excluir-exercicio": if (exercicio && confirm(`Excluir “${exercicio.nome}” desta ficha?`)) { ficha.exercicios = ficha.exercicios.filter(item => item.id !== exercicio.id); salvarFichasAcademia(); renderizarAcademia(); } break;
+    }
+});
+
+
+// ========================================
 // 5. MÓDULO: QUALIFICAÇÃO
 // ========================================
 
 const formQualificacao = document.getElementById("formQualificacao");
 const btnCopiarQualificacao = document.getElementById("btnCopiarQualificacao");
 const btnLimparFormQualificacao = document.getElementById("btnLimparFormQualificacao");
-const btnSalvarQualificacao = document.getElementById("btnSalvarQualificacao");
-const buscaQualificacoes = document.getElementById("buscaQualificacoes");
-const chaveRascunhoQualificacao = "meuAppQualificacaoRascunho";
-let qualificacaoEmEdicaoId = null;
 
 function obterDadosQualificacaoForm() {
     return {
         condicao: document.getElementById("qCondicao")?.value || "N/I",
-        corRaca: document.getElementById("qCorRaca")?.value || "Não informado",
         nome: document.getElementById("qNome")?.value.trim() || "",
         mae: document.getElementById("qMae")?.value.trim() || "",
         pai: document.getElementById("qPai")?.value.trim() || "",
@@ -270,7 +400,6 @@ function obterDadosQualificacaoForm() {
 function gerarTextoQualificacao(d) {
     return `*QUALIFICAÇÃO DO ENVOLVIDO*
 Condição: ${d.condicao || "N/I"}
-Cor/Raça: ${d.corRaca || "Não informado"}
 Nome: ${d.nome || "N/I"}
 Mãe: ${d.mae || "N/I"}
 Pai: ${d.pai || "N/I"}
@@ -297,146 +426,6 @@ function copiarTextoFormatado(texto, msgSucesso) {
     }
 }
 
-function salvarRascunhoQualificacao() {
-    if (!formQualificacao) return;
-    const dados = obterDadosQualificacaoForm();
-    const temConteudo = Object.entries(dados).some(([chave, valor]) => {
-        if (chave === "condicao") return valor !== "Autor" && valor !== "N/I";
-        if (chave === "corRaca" || chave === "ensino") return valor !== "Não informado" && valor !== "N/I";
-        if (chave === "estadoCivil") return valor !== "Solteiro(a)" && valor !== "N/I";
-        return Boolean(valor);
-    });
-
-    if (!temConteudo && qualificacaoEmEdicaoId === null) {
-        localStorage.removeItem(chaveRascunhoQualificacao);
-        return;
-    }
-
-    localStorage.setItem(chaveRascunhoQualificacao, JSON.stringify({
-        ...dados,
-        editingId: qualificacaoEmEdicaoId
-    }));
-}
-
-function formatarCpfQualificacao(valor) {
-    const digitos = String(valor || "").replace(/\D/g, "").slice(0, 11);
-    let resultado = digitos.slice(0, 3);
-    if (digitos.length > 3) resultado += "." + digitos.slice(3, 6);
-    if (digitos.length > 6) resultado += "." + digitos.slice(6, 9);
-    if (digitos.length > 9) resultado += "-" + digitos.slice(9, 11);
-    return resultado;
-}
-
-function formatarTelefoneQualificacao(valor) {
-    const digitos = String(valor || "").replace(/\D/g, "").slice(0, 11);
-    if (digitos.length === 0) return "";
-    if (digitos.length === 1) return "(" + digitos;
-    if (digitos.length === 2) return "(" + digitos + ")";
-
-    const ddd = digitos.slice(0, 2);
-    const numero = digitos.slice(2);
-    const celular = numero.startsWith("9");
-    const tamanhoPrefixo = celular ? 5 : 4;
-    if (numero.length <= tamanhoPrefixo) return `(${ddd}) ${numero}`;
-    return `(${ddd}) ${numero.slice(0, tamanhoPrefixo)}-${numero.slice(tamanhoPrefixo)}`;
-}
-
-function posicaoAposQuantidadeDeDigitos(valor, quantidade) {
-    if (quantidade <= 0) return 0;
-    let encontrados = 0;
-    for (let indice = 0; indice < valor.length; indice++) {
-        if (/\d/.test(valor[indice])) encontrados++;
-        if (encontrados >= quantidade) return indice + 1;
-    }
-    return valor.length;
-}
-
-function aplicarMascaraComCursor(campo, formatador) {
-    if (!campo) return;
-    campo.addEventListener("input", () => {
-        const posicaoAtual = campo.selectionStart ?? campo.value.length;
-        const digitosAntesDoCursor = campo.value.slice(0, posicaoAtual).replace(/\D/g, "").length;
-        const valorFormatado = formatador(campo.value);
-        if (valorFormatado === campo.value) return;
-
-        campo.value = valorFormatado;
-        const novaPosicao = posicaoAposQuantidadeDeDigitos(valorFormatado, digitosAntesDoCursor);
-        campo.setSelectionRange(novaPosicao, novaPosicao);
-    });
-}
-
-const campoCpfQualificacao = document.getElementById("qCpf");
-const campoTelefoneQualificacao = document.getElementById("qTelefone");
-aplicarMascaraComCursor(campoCpfQualificacao, formatarCpfQualificacao);
-aplicarMascaraComCursor(campoTelefoneQualificacao, formatarTelefoneQualificacao);
-
-function formatarCpfETelefoneNoFormulario() {
-    if (campoCpfQualificacao) campoCpfQualificacao.value = formatarCpfQualificacao(campoCpfQualificacao.value);
-    if (campoTelefoneQualificacao) campoTelefoneQualificacao.value = formatarTelefoneQualificacao(campoTelefoneQualificacao.value);
-}
-
-function preencherFormularioQualificacao(dados = {}) {
-    const campos = {
-        condicao: "qCondicao", corRaca: "qCorRaca", nome: "qNome", mae: "qMae", pai: "qPai",
-        cpf: "qCpf", rg: "qRg", endereco: "qEndereco", telefone: "qTelefone",
-        profissao: "qProfissao", ensino: "qEnsino", estadoCivil: "qEstadoCivil"
-    };
-    Object.entries(campos).forEach(([chave, id]) => {
-        const campo = document.getElementById(id);
-        if (campo && dados[chave] !== undefined && dados[chave] !== null) {
-            campo.value = dados[chave];
-        }
-    });
-    formatarCpfETelefoneNoFormulario();
-}
-
-function limparFormularioQualificacao() {
-    if (formQualificacao) formQualificacao.reset();
-    qualificacaoEmEdicaoId = null;
-    if (btnSalvarQualificacao) btnSalvarQualificacao.textContent = "💾 Salvar no Histórico";
-    localStorage.removeItem(chaveRascunhoQualificacao);
-}
-
-function restaurarRascunhoQualificacao() {
-    if (!formQualificacao) return;
-    try {
-        const rascunho = JSON.parse(localStorage.getItem(chaveRascunhoQualificacao) || "null");
-        if (!rascunho) return;
-        preencherFormularioQualificacao(rascunho);
-        qualificacaoEmEdicaoId = rascunho.editingId ?? null;
-        if (qualificacaoEmEdicaoId !== null && btnSalvarQualificacao) {
-            btnSalvarQualificacao.textContent = "💾 Atualizar Qualificação";
-        }
-    } catch (erro) {
-        localStorage.removeItem(chaveRascunhoQualificacao);
-    }
-}
-
-if (formQualificacao) {
-    formQualificacao.addEventListener("input", salvarRascunhoQualificacao);
-    formQualificacao.addEventListener("change", salvarRascunhoQualificacao);
-    formQualificacao.addEventListener("submit", (e) => {
-        e.preventDefault();
-        const dados = obterDadosQualificacaoForm();
-        if (!dados.nome) return alert("Preencha ao menos o Nome antes de salvar.");
-
-        if (qualificacaoEmEdicaoId !== null) {
-            const indice = qualificacoesSalvas.findIndex(q => String(q.id) === String(qualificacaoEmEdicaoId));
-            if (indice !== -1) {
-                qualificacoesSalvas[indice] = { ...qualificacoesSalvas[indice], ...dados };
-            } else {
-                qualificacoesSalvas.unshift({ id: Date.now(), ...dados });
-            }
-        } else {
-            qualificacoesSalvas.unshift({ id: Date.now(), ...dados });
-        }
-        localStorage.setItem("meuAppQualificacoes", JSON.stringify(qualificacoesSalvas));
-        limparFormularioQualificacao();
-        renderizarQualificacoesSalvas();
-        alert("Qualificação salva!");
-    });
-}
-
 if (btnCopiarQualificacao) {
     btnCopiarQualificacao.addEventListener("click", () => {
         const dados = obterDadosQualificacaoForm();
@@ -445,85 +434,69 @@ if (btnCopiarQualificacao) {
     });
 }
 
+if (formQualificacao) {
+    formQualificacao.addEventListener("submit", (e) => {
+        e.preventDefault();
+        const dados = obterDadosQualificacaoForm();
+        if (!dados.nome) return alert("Preencha ao menos o Nome antes de salvar.");
+
+        qualificacoesSalvas.unshift({ id: Date.now(), ...dados });
+        localStorage.setItem("meuAppQualificacoes", JSON.stringify(qualificacoesSalvas));
+
+        formQualificacao.reset();
+        renderizarQualificacoesSalvas();
+        alert("Qualificação salva!");
+    });
+}
+
 if (btnLimparFormQualificacao) {
-    btnLimparFormQualificacao.addEventListener("click", limparFormularioQualificacao);
-}
-
-if (buscaQualificacoes) {
-    buscaQualificacoes.addEventListener("input", renderizarQualificacoesSalvas);
-}
-
-function escaparHtmlQualificacao(valor) {
-    return String(valor ?? "").replace(/[&<>"']/g, caractere => ({
-        "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"
-    })[caractere]);
+    btnLimparFormQualificacao.addEventListener("click", () => formQualificacao && formQualificacao.reset());
 }
 
 function renderizarQualificacoesSalvas() {
     const lista = document.getElementById("listaQualificacoesSalvas");
     if (!lista) return;
 
-    const termo = (buscaQualificacoes?.value || "").trim().toLocaleLowerCase("pt-BR");
-    const termoNumerico = termo.replace(/\D/g, "");
-    const qualificacoesFiltradas = qualificacoesSalvas.filter(item => {
-        const nome = String(item.nome || "").toLocaleLowerCase("pt-BR");
-        const cpf = String(item.cpf || "").toLocaleLowerCase("pt-BR");
-        const cpfNumerico = cpf.replace(/\D/g, "");
-        return !termo || nome.includes(termo) || cpf.includes(termo) || (termoNumerico && cpfNumerico.includes(termoNumerico));
-    });
-
     lista.innerHTML = "";
-    if (qualificacoesFiltradas.length === 0) {
-        lista.innerHTML = `<p style="text-align:center; opacity:0.6; padding:1rem;">${qualificacoesSalvas.length ? "Nenhum resultado encontrado." : "Nenhuma qualificação salva."}</p>`;
+    const competencia = obterCompetenciaAtual();
+
+const entradasDoMes = entradas.filter(
+    item => item.competencia === competencia
+);
+    if (qualificacoesSalvas.length === 0) {
+        lista.innerHTML = `<p style="text-align:center; opacity:0.6; padding:1rem;">Nenhuma qualificação salva.</p>`;
         return;
     }
 
-    qualificacoesFiltradas.forEach(item => {
+    qualificacoesSalvas.forEach(item => {
         const div = document.createElement("div");
         div.className = "lancamento";
         div.style.flexDirection = "column";
         div.style.alignItems = "flex-start";
         div.style.gap = "8px";
-        const idSeguro = Number(item.id);
+
         div.innerHTML = `
-            <div style="display:flex; justify-content:space-between; width:100%; align-items:center; gap:8px;">
-                <strong>[${escaparHtmlQualificacao(item.condicao || "N/I")}] ${escaparHtmlQualificacao(item.nome || "Sem nome")}</strong>
-                <button class="botao-excluir" onclick="excluirQualificacao(${idSeguro})">✕ Excluir</button>
+            <div style="display:flex; justify-content:space-between; width:100%; align-items:center;">
+                <strong>[${item.condicao}] ${item.nome}</strong>
+                <button class="botao-excluir" onclick="excluirQualificacao(${item.id})">✕ Excluir</button>
             </div>
-            <p style="font-size:13px; color:var(--text-muted);">CPF: ${escaparHtmlQualificacao(item.cpf || "N/I")} | RG: ${escaparHtmlQualificacao(item.rg || "N/I")}</p>
-            <div style="display:flex; gap:8px; flex-wrap:wrap;">
-                <button class="botao-secundario" style="padding:8px 12px; font-size:12px; margin-top:4px;" onclick="editarQualificacao(${idSeguro})">✏️ Editar</button>
-                <button class="botao-secundario" style="padding:8px 12px; font-size:12px; margin-top:4px;" onclick="copiarQualificacaoSalva(${idSeguro})">📋 Copiar Dados</button>
-            </div>
+            <p style="font-size:13px; color:var(--text-muted);">CPF: ${item.cpf || "N/I"} | RG: ${item.rg || "N/I"}</p>
+            <button class="botao-secundario" style="padding:8px 12px; font-size:12px; margin-top:4px;" onclick="copiarQualificacaoSalva(${item.id})">📋 Copiar Dados</button>
         `;
         lista.appendChild(div);
     });
 }
 
-window.editarQualificacao = function(id) {
-    const item = qualificacoesSalvas.find(q => String(q.id) === String(id));
-    if (!item) return;
-    preencherFormularioQualificacao(item);
-    qualificacaoEmEdicaoId = item.id;
-    if (btnSalvarQualificacao) btnSalvarQualificacao.textContent = "💾 Atualizar Qualificação";
-    salvarRascunhoQualificacao();
-    window.scrollTo(0, 0);
-};
-
 window.copiarQualificacaoSalva = function(id) {
-    const item = qualificacoesSalvas.find(q => String(q.id) === String(id));
+    const item = qualificacoesSalvas.find(q => q.id === id);
     if (item) copiarTextoFormatado(gerarTextoQualificacao(item), "Qualificação copiada!");
 };
 
 window.excluirQualificacao = function(id) {
-    qualificacoesSalvas = qualificacoesSalvas.filter(q => String(q.id) !== String(id));
+    qualificacoesSalvas = qualificacoesSalvas.filter(q => q.id !== id);
     localStorage.setItem("meuAppQualificacoes", JSON.stringify(qualificacoesSalvas));
-    if (String(qualificacaoEmEdicaoId) === String(id)) limparFormularioQualificacao();
     renderizarQualificacoesSalvas();
 };
-
-restaurarRascunhoQualificacao();
-renderizarQualificacoesSalvas();
 
 
 // ========================================
@@ -2148,6 +2121,28 @@ function aplicarOrdemSalvaFinancas() {
 // 10. MÓDULO: CONFIGURAÇÕES & BACKUP
 // ========================================
 
+function aplicarModulosOcultos() {
+    const ocultos = new Set(modulosOcultos);
+    document.querySelectorAll("[data-modulo]").forEach(el => { el.hidden = ocultos.has(el.dataset.modulo); });
+    const caixas = { trabalho: "mostrarModuloTrabalho", financas: "mostrarModuloFinancas", academia: "mostrarModuloAcademia" };
+    Object.entries(caixas).forEach(([modulo, id]) => {
+        const caixa = document.getElementById(id);
+        if (caixa) caixa.checked = !ocultos.has(modulo);
+    });
+}
+
+["trabalho", "financas", "academia"].forEach(modulo => {
+    const caixa = document.getElementById(`mostrarModulo${modulo[0].toUpperCase()}${modulo.slice(1)}`);
+    caixa?.addEventListener("change", () => {
+        modulosOcultos = modulosOcultos.filter(item => item !== modulo);
+        if (!caixa.checked) modulosOcultos.push(modulo);
+        localStorage.setItem("meuAppModulosOcultos", JSON.stringify(modulosOcultos));
+        aplicarModulosOcultos();
+        const telaVisivelDoModulo = document.querySelector(`.tela:not([hidden])[data-modulo-tela="${modulo}"]`);
+        if (!caixa.checked && telaVisivelDoModulo) mostrarTela(telaInicio, tabInicio);
+    });
+});
+
 const btnExportarBackup = document.getElementById("btnExportarBackup");
 const btnImportarBackup = document.getElementById("btnImportarBackup");
 const inputImportarBackup = document.getElementById("inputImportarBackup");
@@ -2161,10 +2156,11 @@ if (btnExportarBackup) {
             comprasCartao: JSON.parse(localStorage.getItem("meuAppComprasCartao")) || [],
             gastos: JSON.parse(localStorage.getItem("meuAppGastos")) || {},
             qualificacoes: JSON.parse(localStorage.getItem("meuAppQualificacoes")) || [],
-            qualificacaoRascunho: JSON.parse(localStorage.getItem("meuAppQualificacaoRascunho") || "null"),
             turnos: JSON.parse(localStorage.getItem("meuAppTurnos")) || [],
             reds: JSON.parse(localStorage.getItem("meuAppReds")) || [],
             veiculosFiscalizados: JSON.parse(localStorage.getItem("meuAppVeiculos")) || [],
+            fichasAcademia: JSON.parse(localStorage.getItem("meuAppFichasAcademia")) || [],
+            modulosOcultos: JSON.parse(localStorage.getItem("meuAppModulosOcultos")) || [],
             turnoAtivo: JSON.parse(localStorage.getItem("meuAppTurnoAtivo")) || null,
             dataExportacao: new Date().toISOString(),
             ordemFinancas: JSON.parse(localStorage.getItem("meuAppOrdemFinancas")) || [
@@ -2201,14 +2197,11 @@ if (btnImportarBackup && inputImportarBackup) {
                     if (dados.comprasCartao) localStorage.setItem("meuAppComprasCartao", JSON.stringify(dados.comprasCartao));
                     if (dados.gastos) localStorage.setItem("meuAppGastos", JSON.stringify(dados.gastos));
                     if (dados.qualificacoes) localStorage.setItem("meuAppQualificacoes", JSON.stringify(dados.qualificacoes));
-                    if (Object.prototype.hasOwnProperty.call(dados, "qualificacaoRascunho") && dados.qualificacaoRascunho) {
-                        localStorage.setItem("meuAppQualificacaoRascunho", JSON.stringify(dados.qualificacaoRascunho));
-                    } else {
-                        localStorage.removeItem("meuAppQualificacaoRascunho");
-                    }
                     if (dados.turnos) localStorage.setItem("meuAppTurnos", JSON.stringify(dados.turnos));
                     if (Array.isArray(dados.reds)) localStorage.setItem("meuAppReds", JSON.stringify(dados.reds));
                     if (Array.isArray(dados.veiculosFiscalizados)) localStorage.setItem("meuAppVeiculos", JSON.stringify(dados.veiculosFiscalizados));
+                    if (Array.isArray(dados.fichasAcademia)) localStorage.setItem("meuAppFichasAcademia", JSON.stringify(dados.fichasAcademia));
+                    if (Array.isArray(dados.modulosOcultos)) localStorage.setItem("meuAppModulosOcultos", JSON.stringify(dados.modulosOcultos));
                     if (Object.prototype.hasOwnProperty.call(dados, "turnoAtivo")) {
                         if (dados.turnoAtivo) {
                             localStorage.setItem("meuAppTurnoAtivo", JSON.stringify(dados.turnoAtivo));
@@ -2254,32 +2247,11 @@ if ("serviceWorker" in navigator) {
     });
 }
 
-async function solicitarArmazenamentoPersistente() {
-    try {
-        if (!navigator.storage || typeof navigator.storage.persist !== "function") {
-            console.info("[Offline] O navegador não disponibilizou o pedido de armazenamento persistente.");
-            return false;
-        }
-
-        const jaPersistente = typeof navigator.storage.persisted === "function"
-            ? await navigator.storage.persisted()
-            : false;
-        const persistente = jaPersistente || await navigator.storage.persist();
-
-        console.info(persistente
-            ? "[Offline] Armazenamento persistente ativo."
-            : "[Offline] O navegador não concedeu armazenamento persistente; o app continua funcionando offline, mas o sistema pode remover dados sob pressão de espaço.");
-        return persistente;
-    } catch (erro) {
-        console.warn("[Offline] Não foi possível solicitar armazenamento persistente:", erro);
-        return false;
-    }
-}
-
 document.addEventListener("DOMContentLoaded", () => {
+    aplicarModulosOcultos();
     mostrarTela(telaInicio, tabInicio);
+
     atualizarMesFinanceiro();
-    solicitarArmazenamentoPersistente();
 
     console.log("App com layout nativo iOS carregado!");
 });

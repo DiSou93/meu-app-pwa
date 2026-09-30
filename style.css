@@ -590,27 +590,63 @@
 .botao-mes:active {
     transform: scale(0.92);
 }
-/* Layout para tablets: aproveita a largura do iPad em paisagem. */
+
+/* Módulo Academia */
+[data-modulo][hidden] { display: none !important; }
+.academia-cabecalho {
+  display: flex; align-items: center; justify-content: space-between; gap: 16px;
+  margin-bottom: 18px;
+}
+.academia-cabecalho h2, .academia-ficha-topo h2 { font-size: 20px; font-weight: 700; }
+.academia-cabecalho p, .academia-ficha-topo p { color: var(--text-muted); font-size: 13px; margin-top: 4px; }
+.academia-cabecalho .botao-principal { width: auto; white-space: nowrap; }
+.academia-vazio, .academia-ficha {
+  background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 20px;
+  padding: 20px; box-shadow: 0 4px 12px rgba(0,0,0,.04);
+}
+.academia-vazio { text-align: center; padding: 40px 22px; }
+.academia-vazio > div { font-size: 42px; margin-bottom: 10px; }
+.academia-vazio h3 { font-size: 17px; margin-bottom: 8px; }
+.academia-vazio p, .academia-vazio-menor { color: var(--text-muted); font-size: 14px; line-height: 1.5; }
+.academia-abas { display: flex; gap: 8px; overflow-x: auto; padding: 2px 1px 12px; margin-bottom: 4px; }
+.academia-aba { flex: 0 0 auto; border: 1px solid var(--border-color); border-radius: 999px; padding: 9px 15px; background: var(--card-bg); color: var(--text-main); font: inherit; font-size: 13px; font-weight: 600; }
+.academia-aba.ativa { background: var(--accent); border-color: var(--accent); color: white; }
+.academia-ficha-topo { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; margin-bottom: 18px; }
+.academia-acoes-ficha { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 8px; }
+.academia-acoes-ficha button, .academia-acoes-exercicio button { width: auto; padding: 9px 12px; font-size: 12px; }
+.academia-lista-exercicios { display: grid; gap: 12px; margin-top: 16px; }
+.academia-exercicio { border: 1px solid var(--border-color); border-radius: 16px; padding: 16px; background: var(--bg-app); }
+.academia-exercicio-topo { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; }
+.academia-exercicio-topo h3 { font-size: 16px; }
+.academia-exercicio-topo p { margin-top: 5px; color: var(--text-muted); font-size: 13px; }
+.academia-exercicio-topo > strong { white-space: nowrap; font-size: 17px; color: var(--accent); }
+.academia-acoes-exercicio { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 14px; }
+.academia-historico { margin-top: 12px; font-size: 12px; color: var(--text-muted); }
+.academia-historico summary { cursor: pointer; }
+.academia-historico ul { list-style: none; margin-top: 8px; display: grid; gap: 5px; }
+.academia-historico li { display: flex; justify-content: space-between; gap: 12px; }
+.academia-historico li strong { color: var(--text-main); }
+.academia-form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+.academia-campo-largo { grid-column: 1 / -1; }
+.academia-ajuda-modal { color: var(--text-muted); font-size: 13px; margin-bottom: 14px; }
+.preferencias-modulos { display: grid; gap: 10px; }
+.preferencias-modulos label { display: flex; align-items: center; gap: 10px; font-size: 15px; }
+.preferencias-modulos input { width: 20px; height: 20px; accent-color: var(--accent); }
+
+/* O layout do telefone permanece limitado; tablets usam mais largura. */
 @media (min-width: 768px) {
-  #app,
-  .tab-bar {
-    max-width: 1100px;
-  }
-
-  main {
-    padding: 28px 36px;
-  }
-
-  .topo {
-    padding-left: 36px;
-    padding-right: 36px;
-  }
-
-  .formulario-qualificacao {
-    padding: 28px;
-  }
-
-  .modal-sheet {
-    max-width: 760px;
-  }
+  #app, .tab-bar { max-width: 1100px; }
+  main { padding: 28px 36px; }
+  .topo { padding-left: 36px; padding-right: 36px; }
+  .formulario-qualificacao { padding: 28px; }
+  .modal-sheet { max-width: 760px; }
+  .academia-lista-exercicios { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (max-width: 420px) {
+  .academia-cabecalho { align-items: stretch; flex-direction: column; }
+  .academia-cabecalho .botao-principal { width: 100%; }
+  .academia-ficha-topo { flex-direction: column; }
+  .academia-acoes-ficha { justify-content: flex-start; }
+  .academia-form-grid { grid-template-columns: 1fr; }
+  .academia-campo-largo { grid-column: auto; }
 }

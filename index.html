@@ -11,7 +11,7 @@
     <meta http-equiv="Expires" content="0" />
 
     <!-- Configurações PWA e Visual Nativo iPad/iOS -->
-    <meta name="theme-color" content="#142642">
+    <meta name="theme-color" content="#111827">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="Meu App">
@@ -22,7 +22,7 @@
 
     <title>Meu App</title>
 
-    <link rel="stylesheet" href="style.css?v=5">
+    <link rel="stylesheet" href="style.css">
 </head>
 
 <body>
@@ -47,16 +47,22 @@
                 </section>
 
                 <section class="menu">
-                    <button class="card" id="btnTrabalho">
+                    <button class="card" id="btnTrabalho" data-modulo="trabalho">
                         <span class="icone">👮</span>
                         <span class="titulo">Trabalho</span>
                         <span class="descricao">Serviço e ferramentas</span>
                     </button>
 
-                    <button class="card" id="btnFinancas">
+                    <button class="card" id="btnFinancas" data-modulo="financas">
                         <span class="icone">💰</span>
                         <span class="titulo">Finanças</span>
                         <span class="descricao">Controle financeiro</span>
+                    </button>
+
+                    <button class="card" id="btnAcademia" data-modulo="academia">
+                        <span class="icone">🏋️</span>
+                        <span class="titulo">Academia</span>
+                        <span class="descricao">Fichas e cargas dos exercícios</span>
                     </button>
 
                     <button class="card" id="btnConfiguracoes">
@@ -74,7 +80,7 @@
         <!-- TELA TRABALHO (MENU) -->
         <!-- ========================= -->
 
-        <section id="telaTrabalho" class="tela" hidden>
+        <section id="telaTrabalho" class="tela" data-modulo-tela="trabalho" hidden>
 
             <header class="topo">
                 <h1>Trabalho</h1>
@@ -116,7 +122,7 @@
         <!-- TELA QUALIFICAÇÃO -->
         <!-- ========================= -->
 
-        <section id="telaQualificacao" class="tela" hidden>
+        <section id="telaQualificacao" class="tela" data-modulo-tela="trabalho" hidden>
 
             <header class="topo">
                 <button id="btnVoltarTrabalhoQualificacao" class="botao-voltar">← Voltar</button>
@@ -139,7 +145,6 @@
                         </select>
                     </div>
 
-
                     <div class="campo-form">
                         <label>Nome Completo</label>
                         <input type="text" id="qNome" placeholder="Ex: João da Silva">
@@ -157,7 +162,7 @@
 
                     <div class="campo-form">
                         <label>CPF</label>
-                        <input type="text" id="qCpf" inputmode="numeric" placeholder="000.000.000-00">
+                        <input type="text" id="qCpf" placeholder="000.000.000-00">
                     </div>
 
                     <div class="campo-form">
@@ -172,7 +177,7 @@
 
                     <div class="campo-form">
                         <label>Telefone / WhatsApp</label>
-                        <input type="tel" id="qTelefone" maxlength="15" placeholder="(00) 00000-0000">
+                        <input type="tel" id="qTelefone" placeholder="(00) 00000-0000">
                     </div>
 
                     <div class="campo-form">
@@ -204,21 +209,9 @@
                         </select>
                     </div>
 
-                                        <div class="campo-form">
-                        <label for="qCorRaca">Cor/Raça</label>
-                        <select id="qCorRaca">
-                            <option value="Não informado">Não informado</option>
-                            <option value="Branca">Branca</option>
-                            <option value="Preta (negra)">Preta (negra)</option>
-                            <option value="Parda">Parda</option>
-                            <option value="Amarela">Amarela</option>
-                            <option value="Indígena">Indígena</option>
-                        </select>
-                    </div>
-
-<div class="acoes-formulario">
+                    <div class="acoes-formulario">
                         <button type="button" id="btnCopiarQualificacao" class="botao-principal">📋 Copiar Texto Formatado</button>
-                        <button type="submit" id="btnSalvarQualificacao" class="botao-secundario">💾 Salvar no Histórico</button>
+                        <button type="submit" class="botao-secundario">💾 Salvar no Histórico</button>
                         <button type="button" id="btnLimparFormQualificacao" class="botao-excluir" style="width:100%; text-align:center; padding:10px;">Limpar Formulário</button>
                     </div>
 
@@ -227,10 +220,6 @@
                 <hr style="margin: 24px 0; border: none; border-top: 1px solid var(--border-color);">
 
                 <h2>Histórico Salvo</h2>
-                <div class="campo-form" style="margin-top: 14px;">
-                    <label for="buscaQualificacoes">Buscar por nome ou CPF</label>
-                    <input type="search" id="buscaQualificacoes" placeholder="Digite um nome ou CPF">
-                </div>
                 <div id="listaQualificacoesSalvas" class="lista-lancamentos" style="margin-top: 14px;"></div>
             </main>
 
@@ -241,7 +230,7 @@
         <!-- TELA MEU TURNO -->
         <!-- ========================= -->
 
-        <section id="telaMeuTurno" class="tela" hidden>
+        <section id="telaMeuTurno" class="tela" data-modulo-tela="trabalho" hidden>
 
             <header class="topo">
                 <button id="btnVoltarTrabalhoTurno" class="botao-voltar">← Voltar</button>
@@ -303,7 +292,7 @@
 
         </section>
 
-        <section id="telaHistoricoReds" class="tela" hidden>
+        <section id="telaHistoricoReds" class="tela" data-modulo-tela="trabalho" hidden>
             <header class="topo">
                 <button id="btnVoltarHistoricoReds" class="botao-voltar">← Voltar</button>
                 <h1>Histórico REDS</h1>
@@ -351,7 +340,7 @@
             </main>
         </section>
         
-        <section id="telaVeiculos" class="tela" hidden>
+        <section id="telaVeiculos" class="tela" data-modulo-tela="trabalho" hidden>
             <header class="topo">
                 <button id="btnVoltarVeiculos" class="botao-voltar">← Voltar</button>
                 <h1>Veículos</h1>
@@ -379,10 +368,30 @@
 
 
         <!-- ========================= -->
+        <!-- TELA ACADEMIA -->
+        <!-- ========================= -->
+        <section id="telaAcademia" class="tela" data-modulo-tela="academia" hidden>
+            <header class="topo">
+                <h1>Academia</h1>
+                <p>Fichas de treino e evolução de cargas</p>
+            </header>
+            <main>
+                <section class="academia-cabecalho">
+                    <div>
+                        <h2>Minhas fichas</h2>
+                        <p>Crie uma ficha para cada treino ou grupo muscular.</p>
+                    </div>
+                    <button id="btnNovaFichaAcademia" class="botao-principal">＋ Criar ficha</button>
+                </section>
+                <div id="academiaConteudo"></div>
+            </main>
+        </section>
+
+        <!-- ========================= -->
         <!-- TELA FINANÇAS -->
         <!-- ========================= -->
 
-        <section id="telaFinancas" class="tela" hidden>
+        <section id="telaFinancas" class="tela" data-modulo-tela="financas" hidden>
 
             <header class="topo">
                 <h1>Finanças</h1>
@@ -472,7 +481,7 @@
         <!-- TELA ENTRADAS -->
         <!-- ========================= -->
 
-        <section id="telaEntradas" class="tela" hidden>
+        <section id="telaEntradas" class="tela" data-modulo-tela="financas" hidden>
             <header class="topo">
                 <button class="botao-voltar btn-voltar-financas">← Voltar</button>
                 <h1>Entradas</h1>
@@ -493,7 +502,7 @@
         <!-- TELA CARTÕES DE CRÉDITO -->
         <!-- ========================= -->
 
-        <section id="telaCartao" class="tela" hidden>
+        <section id="telaCartao" class="tela" data-modulo-tela="financas" hidden>
             <header class="topo">
                 <button class="botao-voltar btn-voltar-financas">← Voltar</button>
                 <h1>Cartões de Crédito</h1>
@@ -519,7 +528,7 @@
         <!-- TELA GENÉRICA DE GASTOS -->
         <!-- ========================= -->
 
-        <section id="telaGastosGenerica" class="tela" hidden>
+        <section id="telaGastosGenerica" class="tela" data-modulo-tela="financas" hidden>
             <header class="topo">
                 <button class="botao-voltar btn-voltar-financas">← Voltar</button>
                 <h1 id="tituloTelaGasto">Gastos</h1>
@@ -549,11 +558,20 @@
 
             <main>
                 <section class="formulario-qualificacao" style="gap: 20px;">
-                    
+                    <div>
+                        <h3 style="font-size: 16px; font-weight: 700; margin-bottom: 6px;">📱 Abas principais</h3>
+                        <p style="font-size: 13px; color: var(--text-muted); margin-bottom: 14px;">Escolha quais módulos aparecem na tela inicial e na barra inferior. Início e Ajustes continuam disponíveis.</p>
+                        <div class="preferencias-modulos">
+                            <label><input type="checkbox" id="mostrarModuloTrabalho" checked> Trabalho</label>
+                            <label><input type="checkbox" id="mostrarModuloFinancas" checked> Finanças</label>
+                            <label><input type="checkbox" id="mostrarModuloAcademia" checked> Academia</label>
+                        </div>
+                    </div>
+                    <hr style="border: none; border-top: 1px solid var(--border-color);">
                     <div>
                         <h3 style="font-size: 16px; font-weight: 700; margin-bottom: 6px;">💾 Backup dos Dados</h3>
                         <p style="font-size: 13px; color: var(--text-muted); margin-bottom: 14px;">
-                            Faça o download de um arquivo com todas as suas informações de Finanças, Qualificações e Turnos para guardar com segurança.
+                            Faça o download de um arquivo com todas as suas informações dos módulos Trabalho, Finanças e Academia para guardar com segurança.
                         </p>
                         <button id="btnExportarBackup" class="botao-principal">📥 Baixar Arquivo de Backup (JSON)</button>
                     </div>
@@ -574,7 +592,7 @@
                     <div>
                         <h3 style="font-size: 16px; font-weight: 700; color: var(--danger); margin-bottom: 6px;">⚠️ Zona de Perigo</h3>
                         <p style="font-size: 13px; color: var(--text-muted); margin-bottom: 14px;">
-                            Apaga permanentemente todos os lançamentos, cartões, qualificações e histórico armazenados no app.
+                            Apaga permanentemente os dados de todos os módulos armazenados neste aparelho.
                         </p>
                         <button id="btnResetarDados" class="botao-excluir" style="width: 100%; padding: 12px; background: rgba(255, 59, 48, 0.1); border-radius: 12px; border: 1px solid var(--danger);">
                             🗑️ Limpar Todos os Dados do App
@@ -594,13 +612,17 @@
                 <span class="tab-icone">🏠</span>
                 <span class="tab-rotulo">Início</span>
             </button>
-            <button class="tab-item" id="tabTrabalho">
+            <button class="tab-item" id="tabTrabalho" data-modulo="trabalho">
                 <span class="tab-icone">👮</span>
                 <span class="tab-rotulo">Trabalho</span>
             </button>
-            <button class="tab-item" id="tabFinancas">
+            <button class="tab-item" id="tabFinancas" data-modulo="financas">
                 <span class="tab-icone">💰</span>
                 <span class="tab-rotulo">Finanças</span>
+            </button>
+            <button class="tab-item" id="tabAcademia" data-modulo="academia">
+                <span class="tab-icone">🏋️</span>
+                <span class="tab-rotulo">Academia</span>
             </button>
             <button class="tab-item" id="tabConfiguracoes">
                 <span class="tab-icone">⚙️</span>
