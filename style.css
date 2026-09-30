@@ -795,3 +795,52 @@ main { padding: 22px 18px 28px; }
 }
 
 body { padding-bottom: calc(92px + env(safe-area-inset-bottom, 0px)); }
+
+
+/* Correções de encaixe dos campos e espaçamento dos botões */
+.formulario-qualificacao,
+.formulario-qualificacao * {
+  box-sizing: border-box;
+}
+
+.formulario-qualificacao,
+.campo-form,
+.acoes-formulario {
+  min-width: 0;
+  width: 100%;
+}
+
+.campo-form input,
+.campo-form select,
+.campo-form textarea {
+  display: block;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+}
+
+.campo-form input[type="date"],
+.campo-form input[type="time"],
+.campo-form input[type="datetime-local"] {
+  inline-size: 100%;
+  max-inline-size: 100%;
+  min-inline-size: 0;
+  flex: 1 1 auto;
+  margin: 0;
+}
+
+.acoes-formulario {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 12px;
+  margin-top: 4px;
+}
+
+.acoes-formulario > button {
+  display: block;
+  width: 100%;
+  max-width: 100%;
+  margin: 0;
+}
