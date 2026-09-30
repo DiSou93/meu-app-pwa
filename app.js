@@ -318,6 +318,63 @@ function salvarRascunhoQualificacao() {
     }));
 }
 
+function formatarCpfQualificacao(valor) {
+    const digitos = String(valor || "").replace(/\D/g, "").slice(0, 11);
+    let resultado = digitos.slice(0, 3);
+    if (digitos.length > 3) resultado += "." + digitos.slice(3, 6);
+    if (digitos.length > 6) resultado += "." + digitos.slice(6, 9);
+    if (digitos.length > 9) resultado += "-" + digitos.slice(9, 11);
+    return resultado;
+}
+
+function formatarTelefoneQualificacao(valor) {
+    const digitos = String(valor || "").replace(/\D/g, "").slice(0, 11);
+    if (digitos.length === 0) return "";
+    if (digitos.length === 1) return "(" + digitos;
+    if (digitos.length === 2) return "(" + digitos + ")";
+
+    const ddd = digitos.slice(0, 2);
+    const numero = digitos.slice(2);
+    const celular = numero.startsWith("9");
+    const tamanhoPrefixo = celular ? 5 : 4;
+    if (numero.length <= tamanhoPrefixo) return `(${ddd}) ${numero}`;
+    return `(${ddd}) ${numero.slice(0, tamanhoPrefixo)}-${numero.slice(tamanhoPrefixo)}`;
+}
+
+function posicaoAposQuantidadeDeDigitos(valor, quantidade) {
+    if (quantidade <= 0) return 0;
+    let encontrados = 0;
+    for (let indice = 0; indice < valor.length; indice++) {
+        if (/\d/.test(valor[indice])) encontrados++;
+        if (encontrados >= quantidade) return indice + 1;
+    }
+    return valor.length;
+}
+
+function aplicarMascaraComCursor(campo, formatador) {
+    if (!campo) return;
+    campo.addEventListener("input", () => {
+        const posicaoAtual = campo.selectionStart ?? campo.value.length;
+        const digitosAntesDoCursor = campo.value.slice(0, posicaoAtual).replace(/\D/g, "").length;
+        const valorFormatado = formatador(campo.value);
+        if (valorFormatado === campo.value) return;
+
+        campo.value = valorFormatado;
+        const novaPosicao = posicaoAposQuantidadeDeDigitos(valorFormatado, digitosAntesDoCursor);
+        campo.setSelectionRange(novaPosicao, novaPosicao);
+    });
+}
+
+const campoCpfQualificacao = document.getElementById("qCpf");
+const campoTelefoneQualificacao = document.getElementById("qTelefone");
+aplicarMascaraComCursor(campoCpfQualificacao, formatarCpfQualificacao);
+aplicarMascaraComCursor(campoTelefoneQualificacao, formatarTelefoneQualificacao);
+
+function formatarCpfETelefoneNoFormulario() {
+    if (campoCpfQualificacao) campoCpfQualificacao.value = formatarCpfQualificacao(campoCpfQualificacao.value);
+    if (campoTelefoneQualificacao) campoTelefoneQualificacao.value = formatarTelefoneQualificacao(campoTelefoneQualificacao.value);
+}
+
 function preencherFormularioQualificacao(dados = {}) {
     const campos = {
         condicao: "qCondicao", corRaca: "qCorRaca", nome: "qNome", mae: "qMae", pai: "qPai",
@@ -330,6 +387,7 @@ function preencherFormularioQualificacao(dados = {}) {
             campo.value = dados[chave];
         }
     });
+    formatarCpfETelefoneNoFormulario();
 }
 
 function limparFormularioQualificacao() {
