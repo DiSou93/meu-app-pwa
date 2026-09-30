@@ -1632,9 +1632,9 @@ if (btnExportarBackup) {
             gastos: JSON.parse(localStorage.getItem("meuAppGastos")) || {},
             qualificacoes: JSON.parse(localStorage.getItem("meuAppQualificacoes")) || [],
             turnos: JSON.parse(localStorage.getItem("meuAppTurnos")) || [],
-            dataExportacao: new Date().toISOString()
+            dataExportacao: new Date().toISOString(),
             ordemFinancas: JSON.parse(localStorage.getItem("meuAppOrdemFinancas")) || [
-                "entrada", "cartao", "fixos", "mercado", "transporte", "lazer", "assinaturas"
+            "entrada", "cartao", "fixos", "mercado", "transporte", "lazer", "assinaturas"
             ],
         };
 
