@@ -590,257 +590,27 @@
 .botao-mes:active {
     transform: scale(0.92);
 }
-
-/* ========================================
-   REFINO VISUAL — INTERFACE MODERNA
-   Mantém classes e comportamento existentes.
-   ======================================== */
-:root {
-  color-scheme: light;
-  --bg-app: #f3f6fb;
-  --card-bg: #ffffff;
-  --primary: #172a4d;
-  --text-main: #172033;
-  --text-muted: #68758a;
-  --border-color: #e3e9f2;
-  --accent: #2d6cdf;
-  --danger: #e5484d;
-  --success: #1f9d70;
-  --warning: #e9a23b;
-  --radius-card: 22px;
-  --radius-input: 14px;
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    color-scheme: dark;
-    --bg-app: #0d1421;
-    --card-bg: #151f2e;
-    --primary: #172d50;
-    --text-main: #eff4fb;
-    --text-muted: #9aa9bd;
-    --border-color: #29374b;
-    --accent: #79aaff;
-    --danger: #ff7777;
-    --success: #55d6a4;
-    --warning: #ffc36a;
+/* Layout para tablets: aproveita a largura do iPad em paisagem. */
+@media (min-width: 768px) {
+  #app,
+  .tab-bar {
+    max-width: 1100px;
   }
-}
 
-body {
-  background-image: radial-gradient(ellipse at 50% -18%, rgba(45, 108, 223, 0.10), transparent 52%);
-  letter-spacing: -0.01em;
-}
-
-.topo {
-  background: linear-gradient(135deg, #142642 0%, #1d3b68 58%, #285494 100%);
-  padding-right: 22px;
-  padding-left: 22px;
-  border-radius: 0 0 30px 30px;
-  box-shadow: 0 12px 28px rgba(20, 38, 66, 0.18);
-}
-
-.topo h1 {
-  font-size: clamp(28px, 7vw, 34px);
-  letter-spacing: -0.8px;
-}
-
-.topo p { color: rgba(242, 247, 255, 0.76); }
-
-main { padding: 22px 18px 28px; }
-
-.boas-vindas h2 {
-  font-size: 24px;
-  letter-spacing: -0.5px;
-}
-
-.boas-vindas p { margin-top: 4px; }
-
-.menu,
-.menu-financas { gap: 12px; }
-
-.card,
-.card-financeiro {
-  position: relative;
-  overflow: hidden;
-  min-height: 142px;
-  padding: 17px 15px;
-  border: 1px solid var(--border-color);
-  border-radius: var(--radius-card);
-  box-shadow: 0 7px 20px rgba(23, 42, 77, 0.055);
-  transition: transform 0.16s ease, box-shadow 0.16s ease, border-color 0.16s ease;
-}
-
-.card:active,
-.card-financeiro:active {
-  transform: scale(0.975);
-  box-shadow: 0 3px 10px rgba(23, 42, 77, 0.08);
-}
-
-.icone {
-  display: grid;
-  place-items: center;
-  width: 44px;
-  height: 44px;
-  margin-bottom: 11px;
-  border-radius: 15px;
-  background: rgba(45, 108, 223, 0.10);
-  font-size: 24px;
-}
-
-.titulo { font-size: 15px; font-weight: 700; letter-spacing: -0.2px; }
-.descricao { margin-top: 4px; line-height: 1.35; }
-
-.saldo,
-.seletor-mes,
-.navegacao-mes {
-  border: 1px solid var(--border-color);
-  border-radius: var(--radius-card);
-  box-shadow: 0 7px 20px rgba(23, 42, 77, 0.05);
-}
-
-.saldo { padding: 22px 18px; }
-.saldo strong { font-size: 34px; letter-spacing: -1.2px; }
-
-.formulario-qualificacao {
-  gap: 16px;
-  border: 1px solid var(--border-color);
-  border-radius: 24px;
-  padding: 18px;
-  box-shadow: 0 8px 24px rgba(23, 42, 77, 0.045);
-}
-
-.campo-form { gap: 7px; }
-.campo-form label { font-size: 13px; letter-spacing: 0.01em; }
-
-.campo-form input,
-.campo-form select,
-.campo-form textarea {
-  min-height: 48px;
-  border-color: var(--border-color);
-  border-radius: 14px;
-  background: var(--bg-app);
-  transition: border-color 0.15s ease, box-shadow 0.15s ease;
-}
-
-.campo-form input:focus,
-.campo-form select:focus,
-.campo-form textarea:focus {
-  border-color: var(--accent);
-  box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 17%, transparent);
-}
-
-.botao-principal,
-.botao-secundario {
-  min-height: 48px;
-  border-radius: 14px;
-  font-weight: 700;
-  transition: transform 0.15s ease, filter 0.15s ease;
-}
-
-.botao-principal {
-  background: linear-gradient(135deg, #2865cf, #397de6);
-  box-shadow: 0 7px 15px rgba(45, 108, 223, 0.20);
-}
-
-.botao-principal:active,
-.botao-secundario:active { transform: scale(0.98); }
-
-.botao-secundario {
-  border: 1px solid var(--border-color);
-  background: var(--card-bg);
-}
-
-.botao-voltar {
-  padding: 8px 14px;
-  border: 1px solid rgba(255, 255, 255, 0.17);
-  background: rgba(255, 255, 255, 0.12);
-}
-
-.tab-bar {
-  height: calc(72px + env(safe-area-inset-bottom, 0px));
-  padding: 8px 8px env(safe-area-inset-bottom, 5px);
-  border-top-color: rgba(129, 145, 169, 0.22);
-  box-shadow: 0 -8px 24px rgba(23, 42, 77, 0.07);
-}
-
-.tab-item { gap: 3px; font-size: 11px; font-weight: 600; }
-.tab-icone { font-size: 21px; }
-.tab-item.ativo { color: var(--accent); }
-
-.lancamento {
-  border: 1px solid var(--border-color);
-  border-radius: 17px;
-  box-shadow: 0 5px 14px rgba(23, 42, 77, 0.045);
-}
-
-.modal-sheet {
-  border: 1px solid var(--border-color);
-  box-shadow: 0 -12px 36px rgba(12, 23, 40, 0.20);
-}
-
-@media (max-width: 380px) {
-  main { padding-right: 14px; padding-left: 14px; }
-  .card, .card-financeiro { min-height: 132px; padding: 14px 12px; }
-  .icone { width: 40px; height: 40px; border-radius: 13px; }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  *, *::before, *::after {
-    scroll-behavior: auto !important;
-    animation-duration: 0.01ms !important;
-    animation-iteration-count: 1 !important;
-    transition-duration: 0.01ms !important;
+  main {
+    padding: 28px 36px;
   }
-}
 
-body { padding-bottom: calc(92px + env(safe-area-inset-bottom, 0px)); }
+  .topo {
+    padding-left: 36px;
+    padding-right: 36px;
+  }
 
+  .formulario-qualificacao {
+    padding: 28px;
+  }
 
-/* Correções de encaixe dos campos e espaçamento dos botões */
-.formulario-qualificacao,
-.formulario-qualificacao * {
-  box-sizing: border-box;
-}
-
-.formulario-qualificacao,
-.campo-form,
-.acoes-formulario {
-  min-width: 0;
-  width: 100%;
-}
-
-.campo-form input,
-.campo-form select,
-.campo-form textarea {
-  display: block;
-  width: 100%;
-  max-width: 100%;
-  min-width: 0;
-  box-sizing: border-box;
-}
-
-.campo-form input[type="date"],
-.campo-form input[type="time"],
-.campo-form input[type="datetime-local"] {
-  inline-size: 100%;
-  max-inline-size: 100%;
-  min-inline-size: 0;
-  flex: 1 1 auto;
-  margin: 0;
-}
-
-.acoes-formulario {
-  display: flex;
-  flex-direction: column;
-  align-items: stretch;
-  gap: 12px;
-  margin-top: 4px;
-}
-
-.acoes-formulario > button {
-  display: block;
-  width: 100%;
-  max-width: 100%;
-  margin: 0;
+  .modal-sheet {
+    max-width: 760px;
+  }
 }
