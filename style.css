@@ -833,7 +833,11 @@ body { padding-bottom: calc(92px + env(safe-area-inset-bottom, 0px)); }
   min-height: 48px;
   padding: 0 !important;
   margin: 0;
-  text-indent: 12px;
+  text-indent: 0;
+  line-height: normal;
+  vertical-align: middle;
+  padding-block: 10px !important;
+  padding-inline: 0 !important;
 }
 
 .acoes-formulario {

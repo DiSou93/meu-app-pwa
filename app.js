@@ -393,7 +393,8 @@ function obterDadosQualificacaoForm() {
         telefone: document.getElementById("qTelefone")?.value.trim() || "",
         profissao: document.getElementById("qProfissao")?.value.trim() || "",
         ensino: document.getElementById("qEnsino")?.value || "N/I",
-        estadoCivil: document.getElementById("qEstadoCivil")?.value || "N/I"
+        estadoCivil: document.getElementById("qEstadoCivil")?.value || "N/I",
+        corRaca: document.getElementById("qCorRaca")?.value || "Não informado"
     };
 }
 
@@ -409,7 +410,8 @@ Endereço: ${d.endereco || "N/I"}
 Telefone: ${d.telefone || "N/I"}
 Profissão: ${d.profissao || "N/I"}
 Ensino: ${d.ensino || "N/I"}
-Estado Civil: ${d.estadoCivil || "N/I"}`;
+Estado Civil: ${d.estadoCivil || "N/I"}
+Cor/Raça: ${d.corRaca || "Não informado"}`;
 }
 
 function copiarTextoFormatado(texto, msgSucesso) {
