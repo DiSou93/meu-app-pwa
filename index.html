@@ -139,6 +139,7 @@
                         </select>
                     </div>
 
+
                     <div class="campo-form">
                         <label>Nome Completo</label>
                         <input type="text" id="qNome" placeholder="Ex: João da Silva">
@@ -203,9 +204,21 @@
                         </select>
                     </div>
 
-                    <div class="acoes-formulario">
+                                        <div class="campo-form">
+                        <label for="qCorRaca">Cor/Raça</label>
+                        <select id="qCorRaca">
+                            <option value="Não informado">Não informado</option>
+                            <option value="Branca">Branca</option>
+                            <option value="Preta (negra)">Preta (negra)</option>
+                            <option value="Parda">Parda</option>
+                            <option value="Amarela">Amarela</option>
+                            <option value="Indígena">Indígena</option>
+                        </select>
+                    </div>
+
+<div class="acoes-formulario">
                         <button type="button" id="btnCopiarQualificacao" class="botao-principal">📋 Copiar Texto Formatado</button>
-                        <button type="submit" class="botao-secundario">💾 Salvar no Histórico</button>
+                        <button type="submit" id="btnSalvarQualificacao" class="botao-secundario">💾 Salvar no Histórico</button>
                         <button type="button" id="btnLimparFormQualificacao" class="botao-excluir" style="width:100%; text-align:center; padding:10px;">Limpar Formulário</button>
                     </div>
 
@@ -214,6 +227,10 @@
                 <hr style="margin: 24px 0; border: none; border-top: 1px solid var(--border-color);">
 
                 <h2>Histórico Salvo</h2>
+                <div class="campo-form" style="margin-top: 14px;">
+                    <label for="buscaQualificacoes">Buscar por nome ou CPF</label>
+                    <input type="search" id="buscaQualificacoes" placeholder="Digite um nome ou CPF">
+                </div>
                 <div id="listaQualificacoesSalvas" class="lista-lancamentos" style="margin-top: 14px;"></div>
             </main>
 
@@ -342,12 +359,21 @@
             </header>
         
             <main>
-                <section class="formulario-qualificacao">
-                    <h2>Veículos fiscalizados</h2>
-                    <div id="listaVeiculos" class="lista-lancamentos">
-                        <p>Nenhum veículo registrado.</p>
+                <form id="formVeiculo" class="formulario-qualificacao">
+                    <h2>Cadastrar veículo</h2>
+                    <p style="font-size:13px;color:var(--text-muted);">Os registros ficam neste aparelho. O backup JSON inclui os CPFs cadastrados.</p>
+                    <div class="campo-form">
+                        <label for="vPlaca">Placa</label>
+                        <input type="text" id="vPlaca" placeholder="ABC1D23" autocapitalize="characters" maxlength="8" required>
                     </div>
-                </section>
+                    <button type="submit" class="botao-principal">＋ Adicionar veículo</button>
+                </form>
+
+                <hr style="margin:24px 0;border:none;border-top:1px solid var(--border-color);">
+                <h2>Veículos fiscalizados</h2>
+                <div id="listaVeiculos" class="lista-lancamentos" style="margin-top:14px;">
+                    <p>Nenhum veículo registrado.</p>
+                </div>
             </main>
         </section>
 

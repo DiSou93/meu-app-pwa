@@ -1,47 +1,75 @@
-const CACHE_NAME = 'meu-app-v1';
-const ASSETS_TO_CACHE = [
-  './',
-  './index.html',
-  './style.css',
-  './app.js',
-  './manifest.json',
-  './icons/icon-192.png',
-  './icons/icon-512.png'
+const CACHE_NAME = "meu-app-v3";
+const APP_SHELL = [
+    "./",
+    "./index.html",
+    "./style.css",
+    "./app.js",
+    "./manifest.json"
+];
+const OPTIONAL_ASSETS = [
+    "./icons/icon-192.png",
+    "./icons/icon-512.png"
 ];
 
-// Instalação do Service Worker e armazenamento dos arquivos em cache
-self.addEventListener('install', (event) => {
-  event.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => {
-      console.log('[SW] Guardando arquivos no cache...');
-      return cache.addAll(ASSETS_TO_CACHE);
-    })
-  );
-  self.skipWaiting();
+self.addEventListener("install", (event) => {
+    event.waitUntil((async () => {
+        const cache = await caches.open(CACHE_NAME);
+        // Os arquivos necessários para abrir e usar o app são obrigatórios.
+        await cache.addAll(APP_SHELL);
+        // Ícones são complementares e não devem impedir a instalação offline.
+        await Promise.all(OPTIONAL_ASSETS.map(async (url) => {
+            try {
+                await cache.add(url);
+            } catch (erro) {
+                console.warn("[SW] Ícone não pôde ser armazenado:", url, erro);
+            }
+        }));
+        await self.skipWaiting();
+    })());
 });
 
-// Ativação e limpeza de caches antigos
-self.addEventListener('activate', (event) => {
-  event.waitUntil(
-    caches.keys().then((cacheNames) => {
-      return Promise.all(
-        cacheNames.map((cache) => {
-          if (cache !== CACHE_NAME) {
-            console.log('[SW] Apagando cache antigo:', cache);
-            return caches.delete(cache);
-          }
-        })
-      );
-    })
-  );
-  self.clients.claim();
+self.addEventListener("activate", (event) => {
+    event.waitUntil((async () => {
+        const nomes = await caches.keys();
+        await Promise.all(nomes.map((nome) => {
+            if (nome.startsWith("meu-app-") && nome !== CACHE_NAME) {
+                return caches.delete(nome);
+            }
+        }));
+        await self.clients.claim();
+    })());
 });
 
-// Interceção de requisições: responde com o cache primeiro (Offline-First)
-self.addEventListener('fetch', (event) => {
-  event.respondWith(
-    caches.match(event.request).then((response) => {
-      return response || fetch(event.request);
-    })
-  );
+self.addEventListener("fetch", (event) => {
+    const request = event.request;
+    const url = new URL(request.url);
+
+    // Deixa requisições externas e operações que não sejam GET fora do cache local.
+    if (request.method !== "GET" || url.origin !== self.location.origin) return;
+
+    event.respondWith((async () => {
+        const cache = await caches.open(CACHE_NAME);
+        const isNavigation = request.mode === "navigate";
+        const cacheKey = isNavigation ? "./index.html" : request;
+        const cached = await cache.match(cacheKey);
+        if (cached) return cached;
+
+        try {
+            const response = await fetch(request);
+            if (response && response.ok && response.type === "basic") {
+                await cache.put(request, response.clone());
+            }
+            return response;
+        } catch (erro) {
+            // Se a navegação não estiver no cache exato, abre o shell local do app.
+            if (isNavigation) {
+                const indexLocal = await cache.match("./index.html");
+                if (indexLocal) return indexLocal;
+            }
+            return new Response("Sem conexão. Abra o aplicativo novamente quando os arquivos estiverem disponíveis no aparelho.", {
+                status: 503,
+                headers: { "Content-Type": "text/plain; charset=utf-8" }
+            });
+        }
+    })());
 });

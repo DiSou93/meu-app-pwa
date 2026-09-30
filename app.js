@@ -12,6 +12,7 @@ let comprasCartao = JSON.parse(localStorage.getItem("meuAppComprasCartao")) || [
 let qualificacoesSalvas = JSON.parse(localStorage.getItem("meuAppQualificacoes")) || [];
 let turnosSalvos = JSON.parse(localStorage.getItem("meuAppTurnos")) || [];
 let redsSalvos = JSON.parse(localStorage.getItem("meuAppReds")) || [];
+let veiculosSalvos = JSON.parse(localStorage.getItem("meuAppVeiculos")) || [];
 
 let gastos = JSON.parse(localStorage.getItem("meuAppGastos")) || {
     mercado: [],
@@ -181,6 +182,7 @@ if (btnHistoricoReds) {
 if (btnVeiculos) {
     btnVeiculos.addEventListener("click", () => {
         mostrarTela(telaVeiculos, tabTrabalho);
+        renderizarVeiculos();
     });
 }
 
@@ -243,10 +245,15 @@ if (btnModalConfirmar) {
 const formQualificacao = document.getElementById("formQualificacao");
 const btnCopiarQualificacao = document.getElementById("btnCopiarQualificacao");
 const btnLimparFormQualificacao = document.getElementById("btnLimparFormQualificacao");
+const btnSalvarQualificacao = document.getElementById("btnSalvarQualificacao");
+const buscaQualificacoes = document.getElementById("buscaQualificacoes");
+const chaveRascunhoQualificacao = "meuAppQualificacaoRascunho";
+let qualificacaoEmEdicaoId = null;
 
 function obterDadosQualificacaoForm() {
     return {
         condicao: document.getElementById("qCondicao")?.value || "N/I",
+        corRaca: document.getElementById("qCorRaca")?.value || "Não informado",
         nome: document.getElementById("qNome")?.value.trim() || "",
         mae: document.getElementById("qMae")?.value.trim() || "",
         pai: document.getElementById("qPai")?.value.trim() || "",
@@ -263,6 +270,7 @@ function obterDadosQualificacaoForm() {
 function gerarTextoQualificacao(d) {
     return `*QUALIFICAÇÃO DO ENVOLVIDO*
 Condição: ${d.condicao || "N/I"}
+Cor/Raça: ${d.corRaca || "Não informado"}
 Nome: ${d.nome || "N/I"}
 Mãe: ${d.mae || "N/I"}
 Pai: ${d.pai || "N/I"}
@@ -289,6 +297,88 @@ function copiarTextoFormatado(texto, msgSucesso) {
     }
 }
 
+function salvarRascunhoQualificacao() {
+    if (!formQualificacao) return;
+    const dados = obterDadosQualificacaoForm();
+    const temConteudo = Object.entries(dados).some(([chave, valor]) => {
+        if (chave === "condicao") return valor !== "Autor" && valor !== "N/I";
+        if (chave === "corRaca" || chave === "ensino") return valor !== "Não informado" && valor !== "N/I";
+        if (chave === "estadoCivil") return valor !== "Solteiro(a)" && valor !== "N/I";
+        return Boolean(valor);
+    });
+
+    if (!temConteudo && qualificacaoEmEdicaoId === null) {
+        localStorage.removeItem(chaveRascunhoQualificacao);
+        return;
+    }
+
+    localStorage.setItem(chaveRascunhoQualificacao, JSON.stringify({
+        ...dados,
+        editingId: qualificacaoEmEdicaoId
+    }));
+}
+
+function preencherFormularioQualificacao(dados = {}) {
+    const campos = {
+        condicao: "qCondicao", corRaca: "qCorRaca", nome: "qNome", mae: "qMae", pai: "qPai",
+        cpf: "qCpf", rg: "qRg", endereco: "qEndereco", telefone: "qTelefone",
+        profissao: "qProfissao", ensino: "qEnsino", estadoCivil: "qEstadoCivil"
+    };
+    Object.entries(campos).forEach(([chave, id]) => {
+        const campo = document.getElementById(id);
+        if (campo && dados[chave] !== undefined && dados[chave] !== null) {
+            campo.value = dados[chave];
+        }
+    });
+}
+
+function limparFormularioQualificacao() {
+    if (formQualificacao) formQualificacao.reset();
+    qualificacaoEmEdicaoId = null;
+    if (btnSalvarQualificacao) btnSalvarQualificacao.textContent = "💾 Salvar no Histórico";
+    localStorage.removeItem(chaveRascunhoQualificacao);
+}
+
+function restaurarRascunhoQualificacao() {
+    if (!formQualificacao) return;
+    try {
+        const rascunho = JSON.parse(localStorage.getItem(chaveRascunhoQualificacao) || "null");
+        if (!rascunho) return;
+        preencherFormularioQualificacao(rascunho);
+        qualificacaoEmEdicaoId = rascunho.editingId ?? null;
+        if (qualificacaoEmEdicaoId !== null && btnSalvarQualificacao) {
+            btnSalvarQualificacao.textContent = "💾 Atualizar Qualificação";
+        }
+    } catch (erro) {
+        localStorage.removeItem(chaveRascunhoQualificacao);
+    }
+}
+
+if (formQualificacao) {
+    formQualificacao.addEventListener("input", salvarRascunhoQualificacao);
+    formQualificacao.addEventListener("change", salvarRascunhoQualificacao);
+    formQualificacao.addEventListener("submit", (e) => {
+        e.preventDefault();
+        const dados = obterDadosQualificacaoForm();
+        if (!dados.nome) return alert("Preencha ao menos o Nome antes de salvar.");
+
+        if (qualificacaoEmEdicaoId !== null) {
+            const indice = qualificacoesSalvas.findIndex(q => String(q.id) === String(qualificacaoEmEdicaoId));
+            if (indice !== -1) {
+                qualificacoesSalvas[indice] = { ...qualificacoesSalvas[indice], ...dados };
+            } else {
+                qualificacoesSalvas.unshift({ id: Date.now(), ...dados });
+            }
+        } else {
+            qualificacoesSalvas.unshift({ id: Date.now(), ...dados });
+        }
+        localStorage.setItem("meuAppQualificacoes", JSON.stringify(qualificacoesSalvas));
+        limparFormularioQualificacao();
+        renderizarQualificacoesSalvas();
+        alert("Qualificação salva!");
+    });
+}
+
 if (btnCopiarQualificacao) {
     btnCopiarQualificacao.addEventListener("click", () => {
         const dados = obterDadosQualificacaoForm();
@@ -297,69 +387,85 @@ if (btnCopiarQualificacao) {
     });
 }
 
-if (formQualificacao) {
-    formQualificacao.addEventListener("submit", (e) => {
-        e.preventDefault();
-        const dados = obterDadosQualificacaoForm();
-        if (!dados.nome) return alert("Preencha ao menos o Nome antes de salvar.");
-
-        qualificacoesSalvas.unshift({ id: Date.now(), ...dados });
-        localStorage.setItem("meuAppQualificacoes", JSON.stringify(qualificacoesSalvas));
-
-        formQualificacao.reset();
-        renderizarQualificacoesSalvas();
-        alert("Qualificação salva!");
-    });
+if (btnLimparFormQualificacao) {
+    btnLimparFormQualificacao.addEventListener("click", limparFormularioQualificacao);
 }
 
-if (btnLimparFormQualificacao) {
-    btnLimparFormQualificacao.addEventListener("click", () => formQualificacao && formQualificacao.reset());
+if (buscaQualificacoes) {
+    buscaQualificacoes.addEventListener("input", renderizarQualificacoesSalvas);
+}
+
+function escaparHtmlQualificacao(valor) {
+    return String(valor ?? "").replace(/[&<>"']/g, caractere => ({
+        "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"
+    })[caractere]);
 }
 
 function renderizarQualificacoesSalvas() {
     const lista = document.getElementById("listaQualificacoesSalvas");
     if (!lista) return;
 
-    lista.innerHTML = "";
-    const competencia = obterCompetenciaAtual();
+    const termo = (buscaQualificacoes?.value || "").trim().toLocaleLowerCase("pt-BR");
+    const termoNumerico = termo.replace(/\D/g, "");
+    const qualificacoesFiltradas = qualificacoesSalvas.filter(item => {
+        const nome = String(item.nome || "").toLocaleLowerCase("pt-BR");
+        const cpf = String(item.cpf || "").toLocaleLowerCase("pt-BR");
+        const cpfNumerico = cpf.replace(/\D/g, "");
+        return !termo || nome.includes(termo) || cpf.includes(termo) || (termoNumerico && cpfNumerico.includes(termoNumerico));
+    });
 
-const entradasDoMes = entradas.filter(
-    item => item.competencia === competencia
-);
-    if (qualificacoesSalvas.length === 0) {
-        lista.innerHTML = `<p style="text-align:center; opacity:0.6; padding:1rem;">Nenhuma qualificação salva.</p>`;
+    lista.innerHTML = "";
+    if (qualificacoesFiltradas.length === 0) {
+        lista.innerHTML = `<p style="text-align:center; opacity:0.6; padding:1rem;">${qualificacoesSalvas.length ? "Nenhum resultado encontrado." : "Nenhuma qualificação salva."}</p>`;
         return;
     }
 
-    qualificacoesSalvas.forEach(item => {
+    qualificacoesFiltradas.forEach(item => {
         const div = document.createElement("div");
         div.className = "lancamento";
         div.style.flexDirection = "column";
         div.style.alignItems = "flex-start";
         div.style.gap = "8px";
-
+        const idSeguro = Number(item.id);
         div.innerHTML = `
-            <div style="display:flex; justify-content:space-between; width:100%; align-items:center;">
-                <strong>[${item.condicao}] ${item.nome}</strong>
-                <button class="botao-excluir" onclick="excluirQualificacao(${item.id})">✕ Excluir</button>
+            <div style="display:flex; justify-content:space-between; width:100%; align-items:center; gap:8px;">
+                <strong>[${escaparHtmlQualificacao(item.condicao || "N/I")}] ${escaparHtmlQualificacao(item.nome || "Sem nome")}</strong>
+                <button class="botao-excluir" onclick="excluirQualificacao(${idSeguro})">✕ Excluir</button>
             </div>
-            <p style="font-size:13px; color:var(--text-muted);">CPF: ${item.cpf || "N/I"} | RG: ${item.rg || "N/I"}</p>
-            <button class="botao-secundario" style="padding:8px 12px; font-size:12px; margin-top:4px;" onclick="copiarQualificacaoSalva(${item.id})">📋 Copiar Dados</button>
+            <p style="font-size:13px; color:var(--text-muted);">CPF: ${escaparHtmlQualificacao(item.cpf || "N/I")} | RG: ${escaparHtmlQualificacao(item.rg || "N/I")}</p>
+            <div style="display:flex; gap:8px; flex-wrap:wrap;">
+                <button class="botao-secundario" style="padding:8px 12px; font-size:12px; margin-top:4px;" onclick="editarQualificacao(${idSeguro})">✏️ Editar</button>
+                <button class="botao-secundario" style="padding:8px 12px; font-size:12px; margin-top:4px;" onclick="copiarQualificacaoSalva(${idSeguro})">📋 Copiar Dados</button>
+            </div>
         `;
         lista.appendChild(div);
     });
 }
 
+window.editarQualificacao = function(id) {
+    const item = qualificacoesSalvas.find(q => String(q.id) === String(id));
+    if (!item) return;
+    preencherFormularioQualificacao(item);
+    qualificacaoEmEdicaoId = item.id;
+    if (btnSalvarQualificacao) btnSalvarQualificacao.textContent = "💾 Atualizar Qualificação";
+    salvarRascunhoQualificacao();
+    window.scrollTo(0, 0);
+};
+
 window.copiarQualificacaoSalva = function(id) {
-    const item = qualificacoesSalvas.find(q => q.id === id);
+    const item = qualificacoesSalvas.find(q => String(q.id) === String(id));
     if (item) copiarTextoFormatado(gerarTextoQualificacao(item), "Qualificação copiada!");
 };
 
 window.excluirQualificacao = function(id) {
-    qualificacoesSalvas = qualificacoesSalvas.filter(q => q.id !== id);
+    qualificacoesSalvas = qualificacoesSalvas.filter(q => String(q.id) !== String(id));
     localStorage.setItem("meuAppQualificacoes", JSON.stringify(qualificacoesSalvas));
+    if (String(qualificacaoEmEdicaoId) === String(id)) limparFormularioQualificacao();
     renderizarQualificacoesSalvas();
 };
+
+restaurarRascunhoQualificacao();
+renderizarQualificacoesSalvas();
 
 
 // ========================================
@@ -484,7 +590,144 @@ document.getElementById("btnLimparReds")?.addEventListener("click", limparFormRe
 
 
 // ========================================
-// 7. MÓDULO: MEU TURNO
+// 7. MÓDULO: VEÍCULOS FISCALIZADOS
+// ========================================
+
+const formVeiculo = document.getElementById("formVeiculo");
+
+function salvarVeiculos() {
+    localStorage.setItem("meuAppVeiculos", JSON.stringify(veiculosSalvos));
+}
+
+function formatarCpfVeiculo(cpf) {
+    const digitos = String(cpf || "").replace(/\D/g, "").slice(0, 11);
+    return digitos.length === 11 ? digitos.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, "$1.$2.$3-$4") : digitos;
+}
+
+function renderizarVeiculos() {
+    const lista = document.getElementById("listaVeiculos");
+    if (!lista) return;
+    lista.replaceChildren();
+    if (!veiculosSalvos.length) {
+        const vazio = document.createElement("p");
+        vazio.textContent = "Nenhum veículo registrado.";
+        lista.appendChild(vazio);
+        return;
+    }
+
+    veiculosSalvos.forEach(veiculo => {
+        const card = document.createElement("article");
+        card.className = "lancamento";
+        card.style.cssText = "display:flex;flex-direction:column;align-items:stretch;gap:12px;";
+        const topo = document.createElement("div");
+        topo.style.cssText = "display:flex;justify-content:space-between;align-items:center;gap:8px;";
+        const placa = document.createElement("strong");
+        placa.textContent = veiculo.placa;
+        const contador = document.createElement("span");
+        contador.style.cssText = "font-size:13px;color:var(--text-muted);";
+        contador.textContent = `${(veiculo.abordados || []).length} abordado(s)`;
+        topo.append(placa, contador);
+
+        const formPessoa = document.createElement("form");
+        formPessoa.className = "formulario-qualificacao";
+        formPessoa.style.cssText = "padding:12px;box-shadow:none;border:1px solid var(--border-color);gap:10px;";
+        const nomeCampo = document.createElement("div");
+        nomeCampo.className = "campo-form";
+        const nomeLabel = document.createElement("label");
+        nomeLabel.textContent = "Primeiro nome";
+        const nomeInput = document.createElement("input");
+        nomeInput.type = "text";
+        nomeInput.placeholder = "Nome";
+        nomeInput.autocomplete = "off";
+        nomeInput.required = true;
+        nomeCampo.append(nomeLabel, nomeInput);
+        const cpfCampo = document.createElement("div");
+        cpfCampo.className = "campo-form";
+        const cpfLabel = document.createElement("label");
+        cpfLabel.textContent = "CPF";
+        const cpfInput = document.createElement("input");
+        cpfInput.type = "text";
+        cpfInput.inputMode = "numeric";
+        cpfInput.placeholder = "000.000.000-00";
+        cpfInput.maxLength = 14;
+        cpfInput.autocomplete = "off";
+        cpfInput.required = true;
+        cpfCampo.append(cpfLabel, cpfInput);
+        const addPessoa = document.createElement("button");
+        addPessoa.type = "submit";
+        addPessoa.className = "botao-secundario";
+        addPessoa.textContent = "＋ Adicionar abordado";
+        formPessoa.append(nomeCampo, cpfCampo, addPessoa);
+        formPessoa.addEventListener("submit", event => {
+            event.preventDefault();
+            const nome = nomeInput.value.trim().split(/\s+/)[0];
+            const cpf = cpfInput.value.replace(/\D/g, "");
+            if (!nome) return alert("Informe o primeiro nome.");
+            if (cpf.length !== 11) return alert("Confira o CPF: informe os 11 dígitos.");
+            veiculo.abordados = veiculo.abordados || [];
+            veiculo.abordados.push({ id: Date.now(), nome, cpf });
+            salvarVeiculos();
+            renderizarVeiculos();
+        });
+
+        const pessoas = document.createElement("div");
+        pessoas.className = "lista-lancamentos";
+        (veiculo.abordados || []).forEach(pessoa => {
+            const linha = document.createElement("div");
+            linha.className = "lancamento";
+            linha.style.cssText = "padding:10px 12px;gap:8px;";
+            const detalhe = document.createElement("span");
+            detalhe.style.fontSize = "13px";
+            detalhe.textContent = `${pessoa.nome} • CPF ${formatarCpfVeiculo(pessoa.cpf)}`;
+            const remover = document.createElement("button");
+            remover.type = "button";
+            remover.className = "botao-excluir";
+            remover.textContent = "Excluir";
+            remover.addEventListener("click", () => {
+                veiculo.abordados = veiculo.abordados.filter(item => item.id !== pessoa.id);
+                salvarVeiculos();
+                renderizarVeiculos();
+            });
+            linha.append(detalhe, remover);
+            pessoas.appendChild(linha);
+        });
+
+        const excluirVeiculo = document.createElement("button");
+        excluirVeiculo.type = "button";
+        excluirVeiculo.className = "botao-excluir";
+        excluirVeiculo.textContent = "Excluir veículo e abordados";
+        excluirVeiculo.addEventListener("click", () => {
+            if (!confirm(`Excluir ${veiculo.placa} e todos os abordados cadastrados nele?`)) return;
+            veiculosSalvos = veiculosSalvos.filter(item => item.id !== veiculo.id);
+            salvarVeiculos();
+            renderizarVeiculos();
+        });
+        card.append(topo, formPessoa, pessoas, excluirVeiculo);
+        lista.appendChild(card);
+    });
+}
+
+if (formVeiculo) {
+    formVeiculo.addEventListener("submit", event => {
+        event.preventDefault();
+        const input = document.getElementById("vPlaca");
+        const placa = input.value.trim().toUpperCase().replace(/\s+/g, "");
+        if (!placa) return alert("Informe a placa do veículo.");
+        if (veiculosSalvos.some(item => item.placa === placa)) {
+            input.value = "";
+            renderizarVeiculos();
+            return alert("Essa placa já está cadastrada. Adicione os abordados no veículo existente.");
+        }
+        veiculosSalvos.unshift({ id: Date.now(), placa, abordados: [] });
+        salvarVeiculos();
+        formVeiculo.reset();
+        renderizarVeiculos();
+    });
+}
+
+
+// ========================================
+// 8. MÓDULO: MEU TURNO
 // ========================================
 
 const formMeuTurno = document.getElementById("formMeuTurno");
@@ -745,7 +988,7 @@ function recorrenciaAtivaNaCompetencia(item, competencia) {
 
 
 // ========================================
-// 8. MÓDULO: FINANÇAS & BALANÇO (COM BARRA)
+// 9. MÓDULO: FINANÇAS & BALANÇO (COM BARRA)
 // ========================================
 
 function calcularTotalEntradas() {
@@ -1844,7 +2087,7 @@ function aplicarOrdemSalvaFinancas() {
 
 
 // ========================================
-// 9. MÓDULO: CONFIGURAÇÕES & BACKUP
+// 10. MÓDULO: CONFIGURAÇÕES & BACKUP
 // ========================================
 
 const btnExportarBackup = document.getElementById("btnExportarBackup");
@@ -1860,8 +2103,10 @@ if (btnExportarBackup) {
             comprasCartao: JSON.parse(localStorage.getItem("meuAppComprasCartao")) || [],
             gastos: JSON.parse(localStorage.getItem("meuAppGastos")) || {},
             qualificacoes: JSON.parse(localStorage.getItem("meuAppQualificacoes")) || [],
+            qualificacaoRascunho: JSON.parse(localStorage.getItem("meuAppQualificacaoRascunho") || "null"),
             turnos: JSON.parse(localStorage.getItem("meuAppTurnos")) || [],
             reds: JSON.parse(localStorage.getItem("meuAppReds")) || [],
+            veiculosFiscalizados: JSON.parse(localStorage.getItem("meuAppVeiculos")) || [],
             turnoAtivo: JSON.parse(localStorage.getItem("meuAppTurnoAtivo")) || null,
             dataExportacao: new Date().toISOString(),
             ordemFinancas: JSON.parse(localStorage.getItem("meuAppOrdemFinancas")) || [
@@ -1898,8 +2143,14 @@ if (btnImportarBackup && inputImportarBackup) {
                     if (dados.comprasCartao) localStorage.setItem("meuAppComprasCartao", JSON.stringify(dados.comprasCartao));
                     if (dados.gastos) localStorage.setItem("meuAppGastos", JSON.stringify(dados.gastos));
                     if (dados.qualificacoes) localStorage.setItem("meuAppQualificacoes", JSON.stringify(dados.qualificacoes));
+                    if (Object.prototype.hasOwnProperty.call(dados, "qualificacaoRascunho") && dados.qualificacaoRascunho) {
+                        localStorage.setItem("meuAppQualificacaoRascunho", JSON.stringify(dados.qualificacaoRascunho));
+                    } else {
+                        localStorage.removeItem("meuAppQualificacaoRascunho");
+                    }
                     if (dados.turnos) localStorage.setItem("meuAppTurnos", JSON.stringify(dados.turnos));
                     if (Array.isArray(dados.reds)) localStorage.setItem("meuAppReds", JSON.stringify(dados.reds));
+                    if (Array.isArray(dados.veiculosFiscalizados)) localStorage.setItem("meuAppVeiculos", JSON.stringify(dados.veiculosFiscalizados));
                     if (Object.prototype.hasOwnProperty.call(dados, "turnoAtivo")) {
                         if (dados.turnoAtivo) {
                             localStorage.setItem("meuAppTurnoAtivo", JSON.stringify(dados.turnoAtivo));
@@ -1934,7 +2185,7 @@ if (btnResetarDados) {
 
 
 // ========================================
-// 10. REGISTRO DE SERVICE WORKER & INICIALIZAÇÃO
+// 11. REGISTRO DE SERVICE WORKER & INICIALIZAÇÃO
 // ========================================
 
 if ("serviceWorker" in navigator) {
@@ -1945,10 +2196,32 @@ if ("serviceWorker" in navigator) {
     });
 }
 
+async function solicitarArmazenamentoPersistente() {
+    try {
+        if (!navigator.storage || typeof navigator.storage.persist !== "function") {
+            console.info("[Offline] O navegador não disponibilizou o pedido de armazenamento persistente.");
+            return false;
+        }
+
+        const jaPersistente = typeof navigator.storage.persisted === "function"
+            ? await navigator.storage.persisted()
+            : false;
+        const persistente = jaPersistente || await navigator.storage.persist();
+
+        console.info(persistente
+            ? "[Offline] Armazenamento persistente ativo."
+            : "[Offline] O navegador não concedeu armazenamento persistente; o app continua funcionando offline, mas o sistema pode remover dados sob pressão de espaço.");
+        return persistente;
+    } catch (erro) {
+        console.warn("[Offline] Não foi possível solicitar armazenamento persistente:", erro);
+        return false;
+    }
+}
+
 document.addEventListener("DOMContentLoaded", () => {
     mostrarTela(telaInicio, tabInicio);
-
     atualizarMesFinanceiro();
+    solicitarArmazenamentoPersistente();
 
     console.log("App com layout nativo iOS carregado!");
 });
