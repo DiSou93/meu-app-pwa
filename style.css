@@ -909,3 +909,77 @@ body { padding-bottom: calc(92px + env(safe-area-inset-bottom, 0px)); }
   .academia-form-grid { grid-template-columns: 1fr; }
   .academia-campo-largo { grid-column: auto; }
 }
+
+/* Liquid Glass progressivo: navegadores sem suporte mantêm o visual atual. */
+@supports (backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px)) {
+  .tab-bar {
+    background: rgba(247, 249, 253, 0.72);
+    -webkit-backdrop-filter: blur(22px) saturate(1.45);
+    backdrop-filter: blur(22px) saturate(1.45);
+    border-top: 1px solid rgba(255, 255, 255, 0.62);
+    box-shadow: 0 -8px 28px rgba(20, 38, 66, 0.12), inset 0 1px 0 rgba(255,255,255,.45);
+  }
+
+  .modal-sheet {
+    background: rgba(250, 252, 255, 0.88);
+    -webkit-backdrop-filter: blur(24px) saturate(1.4);
+    backdrop-filter: blur(24px) saturate(1.4);
+    border: 1px solid rgba(255, 255, 255, 0.68);
+  }
+
+  .card,
+  .card-financeiro,
+  .saldo,
+  .seletor-mes,
+  .navegacao-mes,
+  .academia-vazio,
+  .academia-ficha {
+    background-color: rgba(255, 255, 255, 0.78);
+    -webkit-backdrop-filter: blur(14px) saturate(1.25);
+    backdrop-filter: blur(14px) saturate(1.25);
+    border: 1px solid rgba(255, 255, 255, 0.72);
+    box-shadow: 0 8px 24px rgba(23, 42, 77, 0.075), inset 0 1px 0 rgba(255,255,255,.58);
+  }
+
+  @media (prefers-color-scheme: dark) {
+    .tab-bar {
+      background: rgba(18, 27, 41, 0.76);
+      border-top-color: rgba(255, 255, 255, 0.12);
+      box-shadow: 0 -8px 28px rgba(0, 0, 0, 0.26), inset 0 1px 0 rgba(255,255,255,.08);
+    }
+
+    .modal-sheet {
+      background: rgba(21, 31, 46, 0.88);
+      border-color: rgba(255, 255, 255, 0.14);
+    }
+
+    .card,
+    .card-financeiro,
+    .saldo,
+    .seletor-mes,
+    .navegacao-mes,
+    .academia-vazio,
+    .academia-ficha {
+      background-color: rgba(21, 31, 46, 0.78);
+      border-color: rgba(255, 255, 255, 0.12);
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2), inset 0 1px 0 rgba(255,255,255,.08);
+    }
+  }
+}
+
+/* Respeita a preferência de acessibilidade por menos transparência. */
+@media (prefers-reduced-transparency: reduce) {
+  .tab-bar { background: var(--card-bg); -webkit-backdrop-filter: none; backdrop-filter: none; }
+  .modal-sheet,
+  .card,
+  .card-financeiro,
+  .saldo,
+  .seletor-mes,
+  .navegacao-mes,
+  .academia-vazio,
+  .academia-ficha {
+    background: var(--card-bg);
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+  }
+}
