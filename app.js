@@ -54,9 +54,12 @@ const telaEntradas = document.getElementById("telaEntradas");
 const telaCartao = document.getElementById("telaCartao");
 const telaGastosGenerica = document.getElementById("telaGastosGenerica");
 const telaConfiguracoes = document.getElementById("telaConfiguracoes");
+const telaHistoricoReds = document.getElementById("telaHistoricoReds");
+const telaVeiculos = document.getElementById("telaVeiculos");
 
 const todasTelas = [
     telaInicio, telaTrabalho, telaQualificacao, telaMeuTurno,
+    telaHistoricoReds, telaVeiculos,
     telaFinancas, telaEntradas, telaCartao, telaGastosGenerica,
     telaConfiguracoes
 ];
@@ -71,6 +74,10 @@ const btnQualificacao = document.getElementById("btnQualificacao");
 const btnMeuTurno = document.getElementById("btnMeuTurno");
 const btnVoltarTrabalhoQualificacao = document.getElementById("btnVoltarTrabalhoQualificacao");
 const btnVoltarTrabalhoTurno = document.getElementById("btnVoltarTrabalhoTurno");
+const btnHistoricoReds = document.getElementById("btnHistoricoReds");
+const btnVeiculos = document.getElementById("btnVeiculos");
+const btnVoltarHistoricoReds = document.getElementById("btnVoltarHistoricoReds");
+const btnVoltarVeiculos = document.getElementById("btnVoltarVeiculos");
 
 // Botões do Submenu Finanças
 const btnsVoltarFinancas = document.querySelectorAll(".btn-voltar-financas");
@@ -158,7 +165,32 @@ if (btnQualificacao) {
 if (btnMeuTurno) {
     btnMeuTurno.addEventListener("click", () => {
         mostrarTela(telaMeuTurno, tabTrabalho);
+        restaurarRascunhoTurno();
         renderizarTurnosSalvos();
+    });
+}
+
+if (btnHistoricoReds) {
+    btnHistoricoReds.addEventListener("click", () => {
+        mostrarTela(telaHistoricoReds, tabTrabalho);
+    });
+}
+
+if (btnVeiculos) {
+    btnVeiculos.addEventListener("click", () => {
+        mostrarTela(telaVeiculos, tabTrabalho);
+    });
+}
+
+if (btnVoltarHistoricoReds) {
+    btnVoltarHistoricoReds.addEventListener("click", () => {
+        mostrarTela(telaTrabalho, tabTrabalho);
+    });
+}
+
+if (btnVoltarVeiculos) {
+    btnVoltarVeiculos.addEventListener("click", () => {
+        mostrarTela(telaTrabalho, tabTrabalho);
     });
 }
 
@@ -336,35 +368,90 @@ const formMeuTurno = document.getElementById("formMeuTurno");
 const btnCopiarTurno = document.getElementById("btnCopiarTurno");
 const btnLimparFormTurno = document.getElementById("btnLimparFormTurno");
 
-function obterDadosTurnoForm() {
-    const kmInicial = parseFloat(document.getElementById("tKmInicial")?.value) || 0;
-    const kmFinal = parseFloat(document.getElementById("tKmFinal")?.value) || 0;
-    const kmRodado = kmFinal >= kmInicial && kmInicial > 0 ? kmFinal - kmInicial : 0;
-
+function lerCamposTurno() {
     return {
+        data: document.getElementById("tDataTurno")?.value || "",
+        horaInicial: document.getElementById("tHoraInicial")?.value || "",
         viatura: document.getElementById("tViatura")?.value.trim() || "",
         box: document.getElementById("tBox")?.value.trim() || "",
         kmInicial: document.getElementById("tKmInicial")?.value.trim() || "",
+        horaFinal: document.getElementById("tHoraFinal")?.value || "",
         kmFinal: document.getElementById("tKmFinal")?.value.trim() || "",
-        kmRodado: kmRodado,
-        data: new Date().toLocaleDateString("pt-BR")
     };
+}
+
+function obterDadosTurnoForm() {
+    const dados = lerCamposTurno();
+    const kmInicial = Number(dados.kmInicial);
+    const kmFinal = Number(dados.kmFinal);
+
+    return {
+        ...dados,
+        kmRodado: dados.kmInicial && dados.kmFinal && kmFinal >= kmInicial
+            ? kmFinal - kmInicial
+            : 0
+    };
+}
+
+function formatarDataTurno(data) {
+    if (!data || !data.includes("-")) return data || "N/I";
+    const [ano, mes, dia] = data.split("-");
+    return `${dia}/${mes}/${ano}`;
+}
+
+function salvarRascunhoTurno() {
+    const dados = lerCamposTurno();
+    const temDados = Object.values(dados).some(valor => String(valor).trim() !== "");
+
+    if (!temDados) {
+        localStorage.removeItem("meuAppTurnoAtivo");
+        return;
+    }
+
+    localStorage.setItem("meuAppTurnoAtivo", JSON.stringify(dados));
+}
+
+function restaurarRascunhoTurno() {
+    const rascunhoSalvo = localStorage.getItem("meuAppTurnoAtivo");
+    if (!rascunhoSalvo || !formMeuTurno) return;
+
+    try {
+        const dados = JSON.parse(rascunhoSalvo);
+        document.getElementById("tDataTurno").value = dados.data || "";
+        document.getElementById("tHoraInicial").value = dados.horaInicial || "";
+        document.getElementById("tViatura").value = dados.viatura || "";
+        document.getElementById("tBox").value = dados.box || "";
+        document.getElementById("tKmInicial").value = dados.kmInicial || "";
+        document.getElementById("tHoraFinal").value = dados.horaFinal || "";
+        document.getElementById("tKmFinal").value = dados.kmFinal || "";
+    } catch (erro) {
+        localStorage.removeItem("meuAppTurnoAtivo");
+        alert("O rascunho do turno não pôde ser lido e foi removido.");
+    }
 }
 
 function gerarTextoTurno(d) {
     return `*REGISTRO DE TURNO*
-📅 Data: ${d.data}
+📅 Data: ${formatarDataTurno(d.data)}
+🕐 Horário inicial: ${d.horaInicial || "N/I"}
+🕘 Horário final: ${d.horaFinal || "N/I"}
 🚔 Viatura: ${d.viatura || "N/I"}
-📍 Box/Setor: ${d.box || "N/I"}
+📍 Box de armamento: ${d.box || "N/I"}
 🏎️ KM Inicial: ${d.kmInicial || "N/I"}
 🏁 KM Final: ${d.kmFinal || "N/I"}
 📊 KM Rodado: ${d.kmRodado} km`;
 }
 
+if (formMeuTurno) {
+    restaurarRascunhoTurno();
+    formMeuTurno.addEventListener("input", salvarRascunhoTurno);
+    formMeuTurno.addEventListener("change", salvarRascunhoTurno);
+}
+
 if (btnCopiarTurno) {
     btnCopiarTurno.addEventListener("click", () => {
         const dados = obterDadosTurnoForm();
-        if (!dados.viatura && !dados.box) return alert("Preencha ao menos a Viatura ou o Box.");
+        if (!dados.viatura && !dados.box) return alert("Preencha ao menos a viatura ou o box.");
         copiarTextoFormatado(gerarTextoTurno(dados), "Resumo do turno copiado!");
     });
 }
@@ -373,19 +460,37 @@ if (formMeuTurno) {
     formMeuTurno.addEventListener("submit", (e) => {
         e.preventDefault();
         const dados = obterDadosTurnoForm();
-        if (!dados.viatura && !dados.box) return alert("Preencha os dados do turno antes de salvar.");
+        const camposObrigatorios = [
+            dados.data, dados.horaInicial, dados.viatura, dados.box,
+            dados.kmInicial, dados.horaFinal, dados.kmFinal
+        ];
+
+        if (camposObrigatorios.some(valor => !String(valor).trim())) {
+            return alert("Preencha todos os dados do turno antes de concluir.");
+        }
+
+        if (Number(dados.kmFinal) < Number(dados.kmInicial)) {
+            return alert("O KM final não pode ser menor que o KM inicial.");
+        }
 
         turnosSalvos.unshift({ id: Date.now(), ...dados });
         localStorage.setItem("meuAppTurnos", JSON.stringify(turnosSalvos));
 
+        localStorage.removeItem("meuAppTurnoAtivo");
         formMeuTurno.reset();
         renderizarTurnosSalvos();
-        alert("Turno salvo!");
+        alert("Turno concluído e salvo no histórico!");
     });
 }
 
 if (btnLimparFormTurno) {
-    btnLimparFormTurno.addEventListener("click", () => formMeuTurno && formMeuTurno.reset());
+    btnLimparFormTurno.addEventListener("click", () => {
+        if (!formMeuTurno) return;
+        if (!confirm("Apagar o rascunho atual do turno?")) return;
+
+        formMeuTurno.reset();
+        localStorage.removeItem("meuAppTurnoAtivo");
+    });
 }
 
 function renderizarTurnosSalvos() {
@@ -407,10 +512,11 @@ function renderizarTurnosSalvos() {
 
         div.innerHTML = `
             <div style="display:flex; justify-content:space-between; width:100%; align-items:center;">
-                <strong>🚔 ${item.viatura || "Viatura N/I"} (${item.data})</strong>
+                <strong>🚔 ${item.viatura || "Viatura N/I"} (${formatarDataTurno(item.data)})</strong>
                 <button class="botao-excluir" onclick="excluirTurno(${item.id})">✕ Excluir</button>
             </div>
-            <p style="font-size:13px; color:var(--text-muted);">Box/Setor: ${item.box || "N/I"}</p>
+            <p style="font-size:13px; color:var(--text-muted);">Horário: ${item.horaInicial || "N/I"}–${item.horaFinal || "N/I"}</p>
+            <p style="font-size:13px; color:var(--text-muted);">Box de armamento: ${item.box || "N/I"}</p>
             <p style="font-size:13px; color:var(--text-muted);">KM: ${item.kmInicial || "0"} → ${item.kmFinal || "0"} (${item.kmRodado} km rodados)</p>
             <button class="botao-secundario" style="padding:8px 12px; font-size:12px; margin-top:4px;" onclick="copiarTurnoSalvo(${item.id})">📋 Copiar Dados</button>
         `;
@@ -1632,6 +1738,7 @@ if (btnExportarBackup) {
             gastos: JSON.parse(localStorage.getItem("meuAppGastos")) || {},
             qualificacoes: JSON.parse(localStorage.getItem("meuAppQualificacoes")) || [],
             turnos: JSON.parse(localStorage.getItem("meuAppTurnos")) || [],
+            turnoAtivo: JSON.parse(localStorage.getItem("meuAppTurnoAtivo")) || null,
             dataExportacao: new Date().toISOString(),
             ordemFinancas: JSON.parse(localStorage.getItem("meuAppOrdemFinancas")) || [
             "entrada", "cartao", "fixos", "mercado", "transporte", "lazer", "assinaturas"
@@ -1668,6 +1775,13 @@ if (btnImportarBackup && inputImportarBackup) {
                     if (dados.gastos) localStorage.setItem("meuAppGastos", JSON.stringify(dados.gastos));
                     if (dados.qualificacoes) localStorage.setItem("meuAppQualificacoes", JSON.stringify(dados.qualificacoes));
                     if (dados.turnos) localStorage.setItem("meuAppTurnos", JSON.stringify(dados.turnos));
+                    if (Object.prototype.hasOwnProperty.call(dados, "turnoAtivo")) {
+                        if (dados.turnoAtivo) {
+                            localStorage.setItem("meuAppTurnoAtivo", JSON.stringify(dados.turnoAtivo));
+                        } else {
+                            localStorage.removeItem("meuAppTurnoAtivo");
+                        }
+                    }
                     if (Array.isArray(dados.ordemFinancas)) {
                         localStorage.setItem("meuAppOrdemFinancas", JSON.stringify(dados.ordemFinancas));
                     }

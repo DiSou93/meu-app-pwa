@@ -94,6 +94,18 @@
                         <span class="titulo">Meu Turno</span>
                         <span class="descricao">Controle de viatura e rodagem</span>
                     </button>
+
+                    <button class="card" id="btnHistoricoReds">
+                        <span class="icone">📄</span>
+                        <span class="titulo">Histórico REDS</span>
+                        <span class="descricao">Rascunhos e registros de ocorrências</span>
+                    </button>
+                    
+                    <button class="card" id="btnVeiculos">
+                        <span class="icone">🚘</span>
+                        <span class="titulo">Veículos</span>
+                        <span class="descricao">Veículos e abordados da fiscalização</span>
+                    </button>
                 </section>
             </main>
 
@@ -224,29 +236,44 @@
                 <form id="formMeuTurno" class="formulario-qualificacao">
                     
                     <div class="campo-form">
-                        <label>Viatura (Prefixo/Modelo)</label>
-                        <input type="text" id="tViatura" placeholder="Ex: VP 12345 / Duster">
+                        <label>Data do turno</label>
+                        <input type="date" id="tDataTurno" required>
                     </div>
 
                     <div class="campo-form">
-                        <label>Box / Setor</label>
-                        <input type="text" id="tBox" placeholder="Ex: Box 01 / Setor Centro">
+                        <label>Horário inicial</label>
+                        <input type="time" id="tHoraInicial" required>
+                    </div>
+
+                    <div class="campo-form">
+                        <label>Viatura (Prefixo/Modelo)</label>
+                        <input type="text" id="tViatura" placeholder="Ex: VP 12345" required>
+                    </div>
+
+                    <div class="campo-form">
+                        <label>Box de armamento (número)</label>
+                        <input type="number" id="tBox" inputmode="numeric" min="1" step="1" placeholder="Ex: 11" required>
                     </div>
 
                     <div class="campo-form">
                         <label>KM Inicial</label>
-                        <input type="number" id="tKmInicial" placeholder="Ex: 102300">
+                        <input type="number" id="tKmInicial" min="0" step="1" placeholder="Ex: 102300" required>
+                    </div>
+
+                    <div class="campo-form">
+                        <label>Horário final</label>
+                        <input type="time" id="tHoraFinal" required>
                     </div>
 
                     <div class="campo-form">
                         <label>KM Final</label>
-                        <input type="number" id="tKmFinal" placeholder="Ex: 102450">
+                        <input type="number" id="tKmFinal" min="0" step="1" placeholder="Ex: 102450" required>
                     </div>
 
                     <div class="acoes-formulario">
                         <button type="button" id="btnCopiarTurno" class="botao-principal">📋 Copiar Resumo do Turno</button>
-                        <button type="submit" class="botao-secundario">💾 Salvar no Histórico</button>
-                        <button type="button" id="btnLimparFormTurno" class="botao-excluir" style="width:100%; text-align:center; padding:10px;">Limpar Formulário</button>
+                        <button type="submit" class="botao-secundario">✅ Concluir e salvar turno</button>
+                        <button type="button" id="btnLimparFormTurno" class="botao-excluir" style="width:100%; text-align:center; padding:10px;">Apagar rascunho</button>
                     </div>
 
                 </form>
@@ -257,6 +284,40 @@
                 <div id="listaTurnosSalvos" class="lista-lancamentos" style="margin-top: 14px;"></div>
             </main>
 
+        </section>
+
+        <section id="telaHistoricoReds" class="tela" hidden>
+            <header class="topo">
+                <button id="btnVoltarHistoricoReds" class="botao-voltar">← Voltar</button>
+                <h1>Histórico REDS</h1>
+                <p>Rascunhos de ocorrência</p>
+            </header>
+        
+            <main>
+                <section class="formulario-qualificacao">
+                    <h2>Ocorrências salvas</h2>
+                    <div id="listaReds" class="lista-lancamentos">
+                        <p>Nenhum rascunho salvo.</p>
+                    </div>
+                </section>
+            </main>
+        </section>
+        
+        <section id="telaVeiculos" class="tela" hidden>
+            <header class="topo">
+                <button id="btnVoltarVeiculos" class="botao-voltar">← Voltar</button>
+                <h1>Veículos</h1>
+                <p>Fiscalização e abordados</p>
+            </header>
+        
+            <main>
+                <section class="formulario-qualificacao">
+                    <h2>Veículos fiscalizados</h2>
+                    <div id="listaVeiculos" class="lista-lancamentos">
+                        <p>Nenhum veículo registrado.</p>
+                    </div>
+                </section>
+            </main>
         </section>
 
 
