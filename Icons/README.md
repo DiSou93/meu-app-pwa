@@ -1,1 +1,0 @@
-Ícones do aplicativo
