@@ -827,7 +827,7 @@ body { padding-bottom: calc(92px + env(safe-area-inset-bottom, 0px)); }
   inline-size: 100%;
   max-inline-size: 100%;
   min-inline-size: 0;
-  flex: 1 1 auto;
+  flex: 0 0 auto;
   box-sizing: border-box;
   height: 48px;
   min-height: 48px;
@@ -836,8 +836,11 @@ body { padding-bottom: calc(92px + env(safe-area-inset-bottom, 0px)); }
   text-indent: 0;
   line-height: normal;
   vertical-align: middle;
-  padding-block: 10px !important;
+  padding-block: 0 !important;
   padding-inline: 0 !important;
+  font-size: 16px;
+  -webkit-appearance: none;
+  appearance: none;
 }
 
 .acoes-formulario {
@@ -986,4 +989,29 @@ body { padding-bottom: calc(92px + env(safe-area-inset-bottom, 0px)); }
     -webkit-backdrop-filter: none;
     backdrop-filter: none;
   }
+}
+
+/* Alinha o conteúdo interno de data/hora sem ampliar o controle. */
+.campo-form input[type="date"]::-webkit-date-and-time-value,
+.campo-form input[type="time"]::-webkit-date-and-time-value,
+.campo-form input[type="datetime-local"]::-webkit-date-and-time-value {
+  height: 100%;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+}
+
+.campo-form input[type="date"]::-webkit-datetime-edit,
+.campo-form input[type="time"]::-webkit-datetime-edit,
+.campo-form input[type="datetime-local"]::-webkit-datetime-edit {
+  padding: 0;
+  min-width: 0;
+}
+
+.campo-form input[type="date"]::-webkit-datetime-edit-fields-wrapper,
+.campo-form input[type="time"]::-webkit-datetime-edit-fields-wrapper,
+.campo-form input[type="datetime-local"]::-webkit-datetime-edit-fields-wrapper {
+  padding: 0;
 }

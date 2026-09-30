@@ -1,4 +1,4 @@
-const CACHE_NAME = 'meu-app-v6';
+const CACHE_NAME = 'meu-app-v7-data-hora';
 const ASSETS_TO_CACHE = [
   './',
   './index.html',
