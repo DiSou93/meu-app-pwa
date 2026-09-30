@@ -193,8 +193,11 @@ function fecharModal() {
 if (btnModalCancelar) btnModalCancelar.addEventListener("click", fecharModal);
 if (btnModalConfirmar) {
     btnModalConfirmar.addEventListener("click", () => {
-        if (acaoModalAtual) acaoModalAtual();
-        fecharModal();
+        try {
+            if (acaoModalAtual) acaoModalAtual();
+        } finally {
+            fecharModal();
+        }
     });
 }
 
@@ -1630,6 +1633,9 @@ if (btnExportarBackup) {
             qualificacoes: JSON.parse(localStorage.getItem("meuAppQualificacoes")) || [],
             turnos: JSON.parse(localStorage.getItem("meuAppTurnos")) || [],
             dataExportacao: new Date().toISOString()
+            ordemFinancas: JSON.parse(localStorage.getItem("meuAppOrdemFinancas")) || [
+                "entrada", "cartao", "fixos", "mercado", "transporte", "lazer", "assinaturas"
+            ],
         };
 
         const blob = new Blob([JSON.stringify(dadosCompletos, null, 2)], { type: "application/json" });
@@ -1662,6 +1668,9 @@ if (btnImportarBackup && inputImportarBackup) {
                     if (dados.gastos) localStorage.setItem("meuAppGastos", JSON.stringify(dados.gastos));
                     if (dados.qualificacoes) localStorage.setItem("meuAppQualificacoes", JSON.stringify(dados.qualificacoes));
                     if (dados.turnos) localStorage.setItem("meuAppTurnos", JSON.stringify(dados.turnos));
+                    if (Array.isArray(dados.ordemFinancas)) {
+                        localStorage.setItem("meuAppOrdemFinancas", JSON.stringify(dados.ordemFinancas));
+                    }
 
                     alert("Backup restaurado!");
                     window.location.reload();
