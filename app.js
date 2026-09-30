@@ -81,12 +81,14 @@ const btnMercado = document.getElementById("btnMercado");
 const btnTransporte = document.getElementById("btnTransporte");
 const btnLazer = document.getElementById("btnLazer");
 const btnAssinaturas = document.getElementById("btnAssinaturas");
+const btnNovaEntrada = document.getElementById("btnNovaEntrada");
+const btnNovoCartao = document.getElementById("btnNovoCartao");
+const btnNovaCompraParcelada = document.getElementById("btnNovaCompraParcelada");
+const btnNovoGastoCategoria = document.getElementById("btnNovoGastoCategoria");
 
 // Seletor de mês das Finanças
-const btnMesAnterior = document.getElementById("btnMesAnterior");
-const btnMesSeguinte = document.getElementById("btnMesSeguinte");
 const btnCompetenciaAnterior = document.getElementById("btnCompetenciaAnterior");
-const mesFinanceiroAtual = document.getElementById("mesFinanceiroAtual");
+
 
 // Tab Bar
 const tabInicio = document.getElementById("tabInicio");
@@ -470,42 +472,6 @@ function obterCompetenciaAtual() {
     return `${anoFinanceiro}-${mes}`;
 }
 
-// Competência que o usuário está visualizando
-let competenciaSelecionada = obterCompetenciaAtual();
-
-function obterCompetenciaSelecionada() {
-    return competenciaSelecionada;
-}
-
-function alterarCompetenciaMes(delta) {
-    const [ano, mes] = competenciaSelecionada.split("-").map(Number);
-
-    const data = new Date(ano, (mes - 1) + delta, 1);
-
-    competenciaSelecionada =
-        `${data.getFullYear()}-${String(data.getMonth() + 1).padStart(2, "0")}`;
-
-    atualizarTextoCompetencia();
-    atualizarBalançoGeral();
-}
-
-function atualizarTextoCompetencia() {
-    const elemento = document.getElementById("textoMesAtual");
-    if (!elemento) return;
-
-    const [ano, mes] = competenciaSelecionada.split("-").map(Number);
-
-    const data = new Date(ano, mes - 1, 1);
-
-    const texto = data.toLocaleDateString("pt-BR", {
-        month: "long",
-        year: "numeric"
-    });
-
-    elemento.textContent =
-        texto.charAt(0).toUpperCase() + texto.slice(1);
-}
-
 
 const btnProximoMes = document.getElementById("btnProximoMes");
 
@@ -544,18 +510,7 @@ function recorrenciaAtivaNaCompetencia(item, competencia) {
 }
 
 
-if (btnMesSeguinte) {
-    btnMesSeguinte.addEventListener("click", () => {
-        alterarMesFinanceiro(1);
-    });
-}
 
-
-if (btnMesAnterior) {
-    btnMesAnterior.addEventListener("click", () => {
-        alterarMesFinanceiro(-1);
-    });
-}
 
 // ========================================
 // 7. MÓDULO: FINANÇAS & BALANÇO (COM BARRA)
@@ -953,29 +908,9 @@ function atualizarListaEntradas() {
 
     const competencia = obterCompetenciaAtual();
 
-const comprasDoCartao = comprasCartao
-    .filter(c =>
-        c.cartao === cartao &&
-        compraAtivaNaCompetencia(c, competencia)
-    )
-    .sort((a, b) => {
-        const [anoInicioA, mesInicioA] = a.competencia.split("-").map(Number);
-        const [anoInicioB, mesInicioB] = b.competencia.split("-").map(Number);
-        const [anoAtual, mesAtual] = competencia.split("-").map(Number);
-
-        const indiceAtual = anoAtual * 12 + (mesAtual - 1);
-
-        const parcelaAtualA =
-            indiceAtual - (anoInicioA * 12 + (mesInicioA - 1)) + 1;
-
-        const parcelaAtualB =
-            indiceAtual - (anoInicioB * 12 + (mesInicioB - 1)) + 1;
-
-        const restantesA = Number(a.parcelas) - parcelaAtualA;
-        const restantesB = Number(b.parcelas) - parcelaAtualB;
-
-        return restantesB - restantesA;
-    });
+    const entradasDoMes = entradas.filter(
+        item => item.competencia === competencia
+    );
 
     lista.innerHTML = "";
 
@@ -985,19 +920,14 @@ const comprasDoCartao = comprasCartao
     );
 
     if (entradasDoMes.length === 0) {
-
         lista.innerHTML = `
             <p style="text-align:center; opacity:0.6; padding:1rem;">
                 Nenhuma entrada registrada neste mês.
             </p>
         `;
-
     } else {
-
         entradasDoMes.forEach(item => {
-
             const div = document.createElement("div");
-
             div.className = "lancamento";
 
             div.innerHTML = `
@@ -1006,7 +936,6 @@ const comprasDoCartao = comprasCartao
                 </div>
 
                 <div style="display:flex; align-items:center; gap:10px;">
-
                     <span style="
                         color:var(--success);
                         font-weight:600;
@@ -1016,10 +945,10 @@ const comprasDoCartao = comprasCartao
 
                     <button
                         class="botao-excluir"
-                        onclick="excluirEntrada(${item.id})">
+                        onclick="excluirEntrada(${item.id})"
+                    >
                         ✕
                     </button>
-
                 </div>
             `;
 
@@ -1031,9 +960,25 @@ const comprasDoCartao = comprasCartao
 }
 
 window.excluirEntrada = function(id) {
+    const entrada = entradas.find(item => item.id === id);
+    if (!entrada) return;
+
+    const confirmar = confirm(
+        `Deseja excluir a entrada "${entrada.descricao}"?\n\n` +
+        `${formatarMoeda(Number(entrada.valor))}`
+    );
+
+    if (!confirmar) return;
+
     entradas = entradas.filter(item => item.id !== id);
-    localStorage.setItem("meuAppEntradas", JSON.stringify(entradas));
+
+    localStorage.setItem(
+        "meuAppEntradas",
+        JSON.stringify(entradas)
+    );
+
     atualizarListaEntradas();
+    atualizarBalançoGeral();
 };
 
 
@@ -1328,24 +1273,77 @@ window.editarCompraCartao = function(id) {
         );
 
         renderizarCartoesECompras();
-        atualizarBalancoGeral();
+        atualizarBalançoGeral();
     });
 };
 
 window.excluirCartao = function(nomeCartao) {
-    if (!confirm(`Deseja apagar o cartão "${nomeCartao}"?`)) return;
-    cartoes = cartoes.filter(c => c !== nomeCartao);
-    comprasCartao = comprasCartao.filter(c => c.cartao !== nomeCartao);
+    const comprasVinculadas = comprasCartao.filter(
+        compra => compra.cartao === nomeCartao
+    );
 
-    localStorage.setItem("meuAppCartoes", JSON.stringify(cartoes));
-    localStorage.setItem("meuAppComprasCartao", JSON.stringify(comprasCartao));
+    if (comprasVinculadas.length > 0) {
+        const confirmar = confirm(
+            `O cartão "${nomeCartao}" possui ${comprasVinculadas.length} ` +
+            `compra${comprasVinculadas.length !== 1 ? "s" : ""} cadastrada${comprasVinculadas.length !== 1 ? "s" : ""}.\n\n` +
+            `Excluir o cartão também apagará TODAS essas compras e o histórico delas.\n\n` +
+            `Deseja continuar?`
+        );
+
+        if (!confirmar) return;
+
+        const confirmarNovamente = confirm(
+            `Confirmar exclusão definitiva do cartão "${nomeCartao}" e de todas as compras vinculadas?`
+        );
+
+        if (!confirmarNovamente) return;
+    } else {
+        const confirmar = confirm(
+            `Deseja excluir o cartão "${nomeCartao}"?`
+        );
+
+        if (!confirmar) return;
+    }
+
+    cartoes = cartoes.filter(c => c !== nomeCartao);
+
+    comprasCartao = comprasCartao.filter(
+        compra => compra.cartao !== nomeCartao
+    );
+
+    localStorage.setItem(
+        "meuAppCartoes",
+        JSON.stringify(cartoes)
+    );
+
+    localStorage.setItem(
+        "meuAppComprasCartao",
+        JSON.stringify(comprasCartao)
+    );
+
     renderizarCartoesECompras();
     atualizarBalançoGeral();
 };
 
 window.excluirCompraCartao = function(id) {
+    const compra = comprasCartao.find(c => c.id === id);
+    if (!compra) return;
+
+    const confirmar = confirm(
+        `Deseja excluir a compra "${compra.descricao}"?\n\n` +
+        `Valor total: ${formatarMoeda(Number(compra.valorTotal))}\n` +
+        `Parcelas: ${compra.parcelas}x`
+    );
+
+    if (!confirmar) return;
+
     comprasCartao = comprasCartao.filter(c => c.id !== id);
-    localStorage.setItem("meuAppComprasCartao", JSON.stringify(comprasCartao));
+
+    localStorage.setItem(
+        "meuAppComprasCartao",
+        JSON.stringify(comprasCartao)
+    );
+
     renderizarCartoesECompras();
     atualizarBalançoGeral();
 };
@@ -1594,7 +1592,7 @@ window.excluirGastoCategoria = function(id) {
     );
 
     atualizarListaGastosCategoria();
-    atualizarBalancoGeral();
+    atualizarBalançoGeral();
 };
 
 
@@ -1702,7 +1700,7 @@ if ("serviceWorker" in navigator) {
 document.addEventListener("DOMContentLoaded", () => {
     mostrarTela(telaInicio, tabInicio);
 
-    atualizarTextoCompetencia();
+    atualizarMesFinanceiro();
 
     console.log("App com layout nativo iOS carregado!");
 });
