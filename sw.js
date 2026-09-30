@@ -1,8 +1,8 @@
-const CACHE_NAME = "meu-app-v4";
+const CACHE_NAME = "meu-app-v5";
 const APP_SHELL = [
     "./",
     "./index.html",
-    "./style.css?v=4",
+    "./style.css?v=5",
     "./app.js",
     "./manifest.json"
 ];
