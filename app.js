@@ -386,6 +386,40 @@ academiaConteudo?.addEventListener("click", event => {
 // ========================================
 
 const formQualificacao = document.getElementById("formQualificacao");
+
+let edicaoQualificacao = null;
+const camposEdicaoQualificacao = {"condicao": "qCondicao", "nome": "qNome", "mae": "qMae", "pai": "qPai", "nascimento": "qNascimento", "cpf": "qCpf", "rg": "qRg", "endereco": "qEndereco", "telefone": "qTelefone", "profissao": "qProfissao", "ensino": "qEnsino", "estadoCivil": "qEstadoCivil", "corRaca": "qCorRaca"};
+function terminarEdicaoQualificacao() {
+    if (!edicaoQualificacao) return;
+    const anterior = edicaoQualificacao;
+    edicaoQualificacao = null;
+    Object.entries(anterior.rascunho).forEach(([id, valor]) => { document.getElementById(id).value = valor; });
+    formQualificacao.querySelector('[type="submit"]').textContent = anterior.rotulo;
+    document.getElementById('btnLimparFormQualificacao').textContent = anterior.limpar;
+}
+window.editarQualificacao = function(id) {
+    const item = qualificacoesSalvas.find(item => item.id === id);
+    if (!item) return;
+    if (edicaoQualificacao) {
+        if (!confirm('Descartar as alterações não salvas e editar outro registro?')) return;
+        terminarEdicaoQualificacao();
+    }
+    edicaoQualificacao = { id, rascunho: Object.fromEntries(Object.values(camposEdicaoQualificacao).map(id => [id, document.getElementById(id).value])),
+        rotulo: formQualificacao.querySelector('[type="submit"]').textContent,
+        limpar: document.getElementById('btnLimparFormQualificacao').textContent };
+    Object.entries(camposEdicaoQualificacao).forEach(([chave, id]) => {
+        const campo = document.getElementById(id);
+        const valor = item[chave] ?? (chave === 'corRaca' ? 'Não informado' : '');
+        if (campo.tagName === 'SELECT' && valor && !Array.from(campo.options).some(opcao => opcao.value === valor)) {
+            campo.add(new Option(valor, valor));
+        }
+        campo.value = valor;
+    });
+    formQualificacao.querySelector('[type="submit"]').textContent = '💾 Salvar alterações';
+    document.getElementById('btnLimparFormQualificacao').textContent = 'Cancelar edição';
+    formQualificacao.scrollIntoView({ block: 'start', behavior: 'smooth' });
+};
+
 const btnCopiarQualificacao = document.getElementById("btnCopiarQualificacao");
 const btnLimparFormQualificacao = document.getElementById("btnLimparFormQualificacao");
 
@@ -395,6 +429,7 @@ function obterDadosQualificacaoForm() {
         nome: document.getElementById("qNome")?.value.trim() || "",
         mae: document.getElementById("qMae")?.value.trim() || "",
         pai: document.getElementById("qPai")?.value.trim() || "",
+        nascimento: document.getElementById("qNascimento")?.value || "",
         cpf: document.getElementById("qCpf")?.value.trim() || "",
         rg: document.getElementById("qRg")?.value.trim() || "",
         endereco: document.getElementById("qEndereco")?.value.trim() || "",
@@ -412,6 +447,7 @@ Condição: ${d.condicao || "N/I"}
 Nome: ${d.nome || "N/I"}
 Mãe: ${d.mae || "N/I"}
 Pai: ${d.pai || "N/I"}
+Data de nascimento: ${formatarDataTurno(d.nascimento)}
 CPF: ${d.cpf || "N/I"}
 RG: ${d.rg || "N/I"}
 Endereço: ${d.endereco || "N/I"}
@@ -450,17 +486,28 @@ if (formQualificacao) {
         const dados = obterDadosQualificacaoForm();
         if (!dados.nome) return alert("Preencha ao menos o Nome antes de salvar.");
 
-        qualificacoesSalvas.unshift({ id: Date.now(), ...dados });
+        const editando = edicaoQualificacao !== null;
+        if (editando) {
+            const indice = qualificacoesSalvas.findIndex(item => item.id === edicaoQualificacao.id);
+            if (indice < 0) return alert("Registro não encontrado. Cancele a edição e tente novamente.");
+            qualificacoesSalvas[indice] = { ...qualificacoesSalvas[indice], ...dados };
+        } else {
+            qualificacoesSalvas.unshift({ id: Date.now(), ...dados });
+        }
         localStorage.setItem("meuAppQualificacoes", JSON.stringify(qualificacoesSalvas));
 
-        formQualificacao.reset();
+        if (editando) terminarEdicaoQualificacao();
+        else formQualificacao.reset();
         renderizarQualificacoesSalvas();
-        alert("Qualificação salva!");
+        alert(editando ? "Qualificação atualizada!" : "Qualificação salva!");
     });
 }
 
 if (btnLimparFormQualificacao) {
-    btnLimparFormQualificacao.addEventListener("click", () => formQualificacao && formQualificacao.reset());
+    btnLimparFormQualificacao.addEventListener("click", () => {
+        if (edicaoQualificacao) terminarEdicaoQualificacao();
+        else formQualificacao?.reset();
+    });
 }
 
 function renderizarQualificacoesSalvas() {
@@ -491,6 +538,7 @@ const entradasDoMes = entradas.filter(
                 <button class="botao-excluir" onclick="excluirQualificacao(${item.id})">✕ Excluir</button>
             </div>
             <p style="font-size:13px; color:var(--text-muted);">CPF: ${item.cpf || "N/I"} | RG: ${item.rg || "N/I"}</p>
+            <button class="botao-secundario" style="padding:8px 12px; font-size:12px;" onclick="editarQualificacao(${item.id})">✏️ Editar</button>
             <button class="botao-secundario" style="padding:8px 12px; font-size:12px; margin-top:4px;" onclick="copiarQualificacaoSalva(${item.id})">📋 Copiar Dados</button>
         `;
         lista.appendChild(div);
@@ -503,6 +551,7 @@ window.copiarQualificacaoSalva = function(id) {
 };
 
 window.excluirQualificacao = function(id) {
+    if (edicaoQualificacao?.id === id) terminarEdicaoQualificacao();
     qualificacoesSalvas = qualificacoesSalvas.filter(q => q.id !== id);
     localStorage.setItem("meuAppQualificacoes", JSON.stringify(qualificacoesSalvas));
     renderizarQualificacoesSalvas();
@@ -772,6 +821,40 @@ if (formVeiculo) {
 // ========================================
 
 const formMeuTurno = document.getElementById("formMeuTurno");
+
+let edicaoTurno = null;
+const camposEdicaoTurno = {"data": "tDataTurno", "horaInicial": "tHoraInicial", "viatura": "tViatura", "box": "tBox", "kmInicial": "tKmInicial", "horaFinal": "tHoraFinal", "kmFinal": "tKmFinal"};
+function terminarEdicaoTurno() {
+    if (!edicaoTurno) return;
+    const anterior = edicaoTurno;
+    edicaoTurno = null;
+    Object.entries(anterior.rascunho).forEach(([id, valor]) => { document.getElementById(id).value = valor; });
+    formMeuTurno.querySelector('[type="submit"]').textContent = anterior.rotulo;
+    document.getElementById('btnLimparFormTurno').textContent = anterior.limpar;
+}
+window.editarTurno = function(id) {
+    const item = turnosSalvos.find(item => item.id === id);
+    if (!item) return;
+    if (edicaoTurno) {
+        if (!confirm('Descartar as alterações não salvas e editar outro registro?')) return;
+        terminarEdicaoTurno();
+    }
+    edicaoTurno = { id, rascunho: Object.fromEntries(Object.values(camposEdicaoTurno).map(id => [id, document.getElementById(id).value])),
+        rotulo: formMeuTurno.querySelector('[type="submit"]').textContent,
+        limpar: document.getElementById('btnLimparFormTurno').textContent };
+    Object.entries(camposEdicaoTurno).forEach(([chave, id]) => {
+        const campo = document.getElementById(id);
+        const valor = item[chave] ?? (chave === 'corRaca' ? 'Não informado' : '');
+        if (campo.tagName === 'SELECT' && valor && !Array.from(campo.options).some(opcao => opcao.value === valor)) {
+            campo.add(new Option(valor, valor));
+        }
+        campo.value = valor;
+    });
+    formMeuTurno.querySelector('[type="submit"]').textContent = '💾 Salvar alterações';
+    document.getElementById('btnLimparFormTurno').textContent = 'Cancelar edição';
+    formMeuTurno.scrollIntoView({ block: 'start', behavior: 'smooth' });
+};
+
 const btnCopiarTurno = document.getElementById("btnCopiarTurno");
 const btnLimparFormTurno = document.getElementById("btnLimparFormTurno");
 
@@ -807,6 +890,7 @@ function formatarDataTurno(data) {
 }
 
 function salvarRascunhoTurno() {
+    if (edicaoTurno) return;
     const dados = lerCamposTurno();
     const temDados = Object.values(dados).some(valor => String(valor).trim() !== "");
 
@@ -819,6 +903,7 @@ function salvarRascunhoTurno() {
 }
 
 function restaurarRascunhoTurno() {
+    if (edicaoTurno) return;
     const rascunhoSalvo = localStorage.getItem("meuAppTurnoAtivo");
     if (!rascunhoSalvo || !formMeuTurno) return;
 
@@ -880,19 +965,30 @@ if (formMeuTurno) {
             return alert("O KM final não pode ser menor que o KM inicial.");
         }
 
-        turnosSalvos.unshift({ id: Date.now(), ...dados });
+        const editando = edicaoTurno !== null;
+        if (editando) {
+            const indice = turnosSalvos.findIndex(item => item.id === edicaoTurno.id);
+            if (indice < 0) return alert("Registro não encontrado. Cancele a edição e tente novamente.");
+            turnosSalvos[indice] = { ...turnosSalvos[indice], ...dados };
+        } else {
+            turnosSalvos.unshift({ id: Date.now(), ...dados });
+        }
         localStorage.setItem("meuAppTurnos", JSON.stringify(turnosSalvos));
 
-        localStorage.removeItem("meuAppTurnoAtivo");
-        formMeuTurno.reset();
+        if (editando) terminarEdicaoTurno();
+        else {
+            localStorage.removeItem("meuAppTurnoAtivo");
+            formMeuTurno.reset();
+        }
         renderizarTurnosSalvos();
-        alert("Turno concluído e salvo no histórico!");
+        alert(editando ? "Turno atualizado!" : "Turno concluído e salvo no histórico!");
     });
 }
 
 if (btnLimparFormTurno) {
     btnLimparFormTurno.addEventListener("click", () => {
         if (!formMeuTurno) return;
+        if (edicaoTurno) { terminarEdicaoTurno(); return; }
         if (!confirm("Apagar o rascunho atual do turno?")) return;
 
         formMeuTurno.reset();
@@ -925,6 +1021,7 @@ function renderizarTurnosSalvos() {
             <p style="font-size:13px; color:var(--text-muted);">Horário: ${item.horaInicial || "N/I"}–${item.horaFinal || "N/I"}</p>
             <p style="font-size:13px; color:var(--text-muted);">Box de armamento: ${item.box || "N/I"}</p>
             <p style="font-size:13px; color:var(--text-muted);">KM: ${item.kmInicial || "0"} → ${item.kmFinal || "0"} (${item.kmRodado} km rodados)</p>
+            <button class="botao-secundario" style="padding:8px 12px; font-size:12px;" onclick="editarTurno(${item.id})">✏️ Editar</button>
             <button class="botao-secundario" style="padding:8px 12px; font-size:12px; margin-top:4px;" onclick="copiarTurnoSalvo(${item.id})">📋 Copiar Dados</button>
         `;
         lista.appendChild(div);
@@ -937,6 +1034,7 @@ window.copiarTurnoSalvo = function(id) {
 };
 
 window.excluirTurno = function(id) {
+    if (edicaoTurno?.id === id) terminarEdicaoTurno();
     turnosSalvos = turnosSalvos.filter(t => t.id !== id);
     localStorage.setItem("meuAppTurnos", JSON.stringify(turnosSalvos));
     renderizarTurnosSalvos();
