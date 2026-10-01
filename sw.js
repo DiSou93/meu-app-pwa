@@ -1,4 +1,4 @@
-const CACHE_NAME = 'meu-app-v10-encerrar-mes-atual';
+const CACHE_NAME = 'meu-app-v11-financas-trabalho';
 const ASSETS_TO_CACHE = [
   './',
   './index.html',

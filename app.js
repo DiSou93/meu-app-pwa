@@ -21,12 +21,18 @@ let gastos = JSON.parse(localStorage.getItem("meuAppGastos")) || {
     lazer: [],
     fixos: [],
     transporte: [],
-    assinaturas: []
+    assinaturas: [],
+    trabalho: []
 };
 
+// Compatibilidade com dados e backups anteriores à categoria Trabalho.
+if (!Array.isArray(gastos.trabalho)) gastos.trabalho = [];
+
 let ordemFinancas = JSON.parse(localStorage.getItem("meuAppOrdemFinancas")) || [
-    "entrada", "cartao", "fixos", "mercado", "transporte", "lazer", "assinaturas"
+    "entrada", "cartao", "fixos", "mercado", "transporte", "lazer", "assinaturas", "trabalho"
 ];
+
+if (!ordemFinancas.includes("trabalho")) ordemFinancas.push("trabalho");
 
 let categoriaAtualGasto = null;
 
@@ -41,7 +47,8 @@ const configCategorias = {
     lazer: { titulo: "Lazer", subtitulo: "Passeios, restaurantes e diversão" },
     fixos: { titulo: "Gastos Fixos", subtitulo: "Aluguel, luz, água e contas da casa" },
     transporte: { titulo: "Transporte", subtitulo: "Combustível, manutenção e transporte" },
-    assinaturas: { titulo: "Assinaturas", subtitulo: "Streaming e serviços recorrentes" }
+    assinaturas: { titulo: "Assinaturas", subtitulo: "Streaming e serviços recorrentes" },
+    trabalho: { titulo: "Trabalho", subtitulo: "Despesas durante o trabalho no mês selecionado" }
 };
 
 
@@ -94,6 +101,7 @@ const btnMercado = document.getElementById("btnMercado");
 const btnTransporte = document.getElementById("btnTransporte");
 const btnLazer = document.getElementById("btnLazer");
 const btnAssinaturas = document.getElementById("btnAssinaturas");
+const btnGastosTrabalho = document.getElementById("btnGastosTrabalho");
 const btnNovaEntrada = document.getElementById("btnNovaEntrada");
 const btnNovoCartao = document.getElementById("btnNovoCartao");
 const btnNovaCompraParcelada = document.getElementById("btnNovaCompraParcelada");
@@ -973,6 +981,9 @@ function alterarMesFinanceiro(diferenca) {
 if (!telaEntradas.hidden) {
     atualizarListaEntradas();
 }
+if (!telaGastosGenerica.hidden) {
+    atualizarListaGastosCategoria();
+}
 }
 
 function obterCompetenciaAtual() {
@@ -1112,7 +1123,7 @@ function calcularTotalGastosCategorias() {
     let total = 0;
 
     // Gastos normais daquele mês
-    ["mercado", "lazer", "transporte"].forEach(categoria => {
+    ["mercado", "lazer", "transporte", "trabalho"].forEach(categoria => {
 
         const itens = gastos[categoria] || [];
 
@@ -1198,7 +1209,8 @@ function abrirDetalhamentoGastos() {
         mercado: "🛒 Mercado",
         lazer: "🎮 Lazer",
         transporte: "🚗 Transporte",
-        assinaturas: "🔄 Assinaturas"
+        assinaturas: "🔄 Assinaturas",
+        trabalho: "💼 Trabalho"
     };
 
     const categorias = [
@@ -1206,7 +1218,8 @@ function abrirDetalhamentoGastos() {
         "mercado",
         "lazer",
         "transporte",
-        "assinaturas"
+        "assinaturas",
+        "trabalho"
     ];
 
     let html = "";
@@ -1872,7 +1885,7 @@ function abrirCategoriaGasto(categoriaKey) {
     atualizarListaGastosCategoria();
 }
 
-[btnMercado, btnLazer, btnFixos, btnTransporte, btnAssinaturas].forEach(btn => {
+[btnMercado, btnLazer, btnFixos, btnTransporte, btnAssinaturas, btnGastosTrabalho].forEach(btn => {
     if (btn) {
         btn.addEventListener("click", () => abrirCategoriaGasto(btn.getAttribute("data-id")));
     }
@@ -1978,6 +1991,7 @@ if (btnNovoGastoCategoria) {
             }
             localStorage.setItem("meuAppGastos", JSON.stringify(gastos));
             atualizarListaGastosCategoria();
+            atualizarBalançoGeral();
         });
     });
 }
@@ -2167,7 +2181,7 @@ if (btnExportarBackup) {
             entradas: JSON.parse(localStorage.getItem("meuAppEntradas")) || [],
             cartoes: JSON.parse(localStorage.getItem("meuAppCartoes")) || ["Nubank"],
             comprasCartao: JSON.parse(localStorage.getItem("meuAppComprasCartao")) || [],
-            gastos: JSON.parse(localStorage.getItem("meuAppGastos")) || {},
+            gastos: gastos,
             qualificacoes: JSON.parse(localStorage.getItem("meuAppQualificacoes")) || [],
             turnos: JSON.parse(localStorage.getItem("meuAppTurnos")) || [],
             reds: JSON.parse(localStorage.getItem("meuAppReds")) || [],
@@ -2177,7 +2191,7 @@ if (btnExportarBackup) {
             turnoAtivo: JSON.parse(localStorage.getItem("meuAppTurnoAtivo")) || null,
             dataExportacao: new Date().toISOString(),
             ordemFinancas: JSON.parse(localStorage.getItem("meuAppOrdemFinancas")) || [
-            "entrada", "cartao", "fixos", "mercado", "transporte", "lazer", "assinaturas"
+            "entrada", "cartao", "fixos", "mercado", "transporte", "lazer", "assinaturas", "trabalho"
             ],
         };
 
