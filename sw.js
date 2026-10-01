@@ -1,4 +1,4 @@
-const CACHE_NAME = 'meu-app-v8-icone-trabalho';
+const CACHE_NAME = 'meu-app-v10-encerrar-mes-atual';
 const ASSETS_TO_CACHE = [
   './',
   './index.html',

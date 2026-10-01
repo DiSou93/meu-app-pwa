@@ -2068,18 +2068,29 @@ window.excluirGastoCategoria = function(id) {
 
     if (!item) return;
 
-    // FIXOS E ASSINATURAS: encerra a recorrência
+    // Encerra no mês selecionado, preservando apenas os meses anteriores.
     if (item.recorrente) {
         const competenciaAtual = obterCompetenciaAtual();
-
+        const [ano, mes] = competenciaAtual.split("-").map(Number);
+        const mesExibido = `${String(mes).padStart(2, "0")}/${ano}`;
         const confirmar = confirm(
-            `Deseja encerrar "${item.descricao}" a partir desta competência?\n\n` +
-            `O histórico dos meses anteriores será mantido.`
+            `Deseja encerrar "${item.descricao}" a partir de ${mesExibido}?\n\n` +
+            `O gasto será excluído deste mês e dos seguintes. O histórico dos meses anteriores será mantido.`
         );
-
         if (!confirmar) return;
 
-        item.competenciaFim = competenciaAtual;
+        if (competenciaParaNumero(competenciaAtual) <= competenciaParaNumero(item.competenciaInicio)) {
+            gastos[categoriaAtualGasto] = itens.filter(gasto => gasto.id !== id);
+        } else {
+            const competenciaAnterior = mes === 1
+                ? `${ano - 1}-12`
+                : `${ano}-${String(mes - 1).padStart(2, "0")}`;
+            // Não prolonga uma recorrência que já tenha sido encerrada antes.
+            if (!item.competenciaFim ||
+                competenciaParaNumero(item.competenciaFim) > competenciaParaNumero(competenciaAnterior)) {
+                item.competenciaFim = competenciaAnterior;
+            }
+        }
     }
 
     // GASTOS NORMAIS: exclui normalmente
