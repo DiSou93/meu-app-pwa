@@ -251,9 +251,11 @@ if (btnModalCancelar) btnModalCancelar.addEventListener("click", fecharModal);
 if (btnModalConfirmar) {
     btnModalConfirmar.addEventListener("click", () => {
         try {
-            if (acaoModalAtual) acaoModalAtual();
-        } finally {
+            if (acaoModalAtual && acaoModalAtual() === false) return;
             fecharModal();
+        } catch (erro) {
+            console.error(erro);
+            alert("Não foi possível concluir. Confira os dados e tente novamente.");
         }
     });
 }
@@ -1968,6 +1970,30 @@ window.excluirCompraCartao = function(id) {
 };
 
 
+// A data da compra é informativa; a competência parte do mês selecionado.
+function competenciaDoPagamento(competenciaBase, metodo) {
+    if (metodo !== "credito") return competenciaBase;
+    const [ano, mes] = competenciaBase.split("-").map(Number);
+    return mes === 12 ? `${ano + 1}-01` : `${ano}-${String(mes + 1).padStart(2, "0")}`;
+}
+
+function dataCompraValida(valor) {
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(valor)) return false;
+    const [ano, mes, dia] = valor.split("-").map(Number);
+    const data = new Date(ano, mes - 1, dia);
+    return ano >= 1900 && data.getFullYear() === ano && data.getMonth() === mes - 1 && data.getDate() === dia;
+}
+
+function dataCompraInicial(competencia) {
+    const hoje = new Date();
+    const mesHoje = `${hoje.getFullYear()}-${String(hoje.getMonth() + 1).padStart(2, "0")}`;
+    return competencia === mesHoje ? `${mesHoje}-${String(hoje.getDate()).padStart(2, "0")}` : `${competencia}-01`;
+}
+
+function rotuloCompetencia(competencia) {
+    return competencia.split("-").reverse().join("/");
+}
+
 // Gastos por Categoria
 function abrirCategoriaGasto(categoriaKey) {
     categoriaAtualGasto = categoriaKey;
@@ -1994,6 +2020,7 @@ if (btnNovoGastoCategoria) {
         if (!categoriaAtualGasto) return;
         
         const config = configCategorias[categoriaAtualGasto];
+        const competenciaBase = obterCompetenciaAtual();
 
         const categoriaRecorrente =
     categoriaAtualGasto === "fixos" ||
@@ -2023,6 +2050,23 @@ if (btnNovoGastoCategoria) {
         >
     </div>
 
+    ${!categoriaRecorrente ? `
+        <div class="campo-form" style="margin-top:12px;">
+            <label for="mGastoDataCompra">Data da compra</label>
+            <input type="date" id="mGastoDataCompra" value="${dataCompraInicial(competenciaBase)}" required>
+        </div>
+        <div class="campo-form" style="margin-top:12px;">
+            <label for="mGastoPagamento">Forma de pagamento</label>
+            <select id="mGastoPagamento" required>
+                <option value="">Selecione</option>
+                <option value="debito">Débito</option>
+                <option value="pix">Pix</option>
+                <option value="credito">Crédito</option>
+            </select>
+        </div>
+        <p id="mGastoCompetencia" aria-live="polite" style="margin-top:12px; font-size:13px; color:var(--text-muted);"></p>
+        <p style="margin-top:6px; font-size:12px; color:var(--text-muted);">A data registra o dia da compra. Débito/Pix entram no mês selecionado; Crédito, no seguinte.</p>
+    ` : ""}
     ${
         categoriaRecorrente
             ? `
@@ -2057,7 +2101,16 @@ if (btnNovoGastoCategoria) {
             const desc = document.getElementById("mGastoDesc")?.value.trim();
             const val = parseFloat(document.getElementById("mGastoValor")?.value);
 
-            if (!desc || isNaN(val) || val <= 0) return alert("Preencha os campos corretamente.");
+            if (!desc || !Number.isFinite(val) || val <= 0) {
+                alert("Preencha a descrição e um valor maior que zero.");
+                return false;
+            }
+            const dataCompra = document.getElementById("mGastoDataCompra")?.value;
+            const metodoPagamento = document.getElementById("mGastoPagamento")?.value;
+            if (!categoriaRecorrente && (!dataCompraValida(dataCompra || "") || !["debito", "pix", "credito"].includes(metodoPagamento))) {
+                alert("Selecione uma data válida e a forma de pagamento.");
+                return false;
+            }
 
             if (categoriaRecorrente) {
 
@@ -2081,8 +2134,10 @@ if (btnNovoGastoCategoria) {
                     descricao: desc,
                     valor: val,
             
-                    competencia: obterCompetenciaAtual(),
-            
+                    competencia: competenciaDoPagamento(competenciaBase, metodoPagamento),
+                    competenciaOrigem: competenciaBase,
+                    dataCompra,
+                    metodoPagamento,
                     data: new Date().toISOString()
                 });
             
@@ -2090,7 +2145,20 @@ if (btnNovoGastoCategoria) {
             localStorage.setItem("meuAppGastos", JSON.stringify(gastos));
             atualizarListaGastosCategoria();
             atualizarBalançoGeral();
+            if (!categoriaRecorrente && metodoPagamento === "credito") {
+                alert(`Gasto salvo em ${rotuloCompetencia(competenciaDoPagamento(competenciaBase, metodoPagamento))}. Avance para essa competência para consultá-lo.`);
+            }
         });
+        if (!categoriaRecorrente) {
+            const pagamento = document.getElementById("mGastoPagamento");
+            const atualizarPrevia = () => {
+                document.getElementById("mGastoCompetencia").textContent = pagamento.value
+                    ? `Será contabilizado em ${rotuloCompetencia(competenciaDoPagamento(competenciaBase, pagamento.value))}.`
+                    : "Selecione a forma de pagamento para conferir a competência.";
+            };
+            pagamento.addEventListener("change", atualizarPrevia);
+            atualizarPrevia();
+        }
     });
 }
 
@@ -2146,9 +2214,10 @@ function atualizarListaGastosCategoria() {
 
             div.innerHTML = `
                 <div>
-                    <strong>${item.descricao}</strong>
+                    <strong>${escaparHTMLAcademia(item.descricao)}</strong>
                     <br>
                     ${indicadorRecorrente}
+                    ${!item.recorrente ? `<small style="color:var(--text-muted);">${dataCompraValida(item.dataCompra || "") ? `Compra: ${formatarDataTurno(item.dataCompra)}` : "Data da compra não informada"} · ${{debito: "Débito", pix: "Pix", credito: "Crédito"}[item.metodoPagamento] || "Pagamento não informado"}</small>` : ""}
                 </div>
 
                 <div style="display:flex; align-items:center; gap:10px;">
