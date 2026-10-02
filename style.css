@@ -765,8 +765,72 @@ main { padding: 22px 18px 28px; }
 }
 
 .tab-item { gap: 3px; font-size: 11px; font-weight: 600; }
-.tab-icone { font-size: 21px; }
+.tab-icone { display: grid; place-items: center; line-height: 1; }
+.tab-icone svg {
+  display: block;
+  width: 23px;
+  height: 23px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
 .tab-item.ativo { color: var(--accent); }
+
+/* Família de ícones vetoriais personalizados, embutidos no HTML para uso offline. */
+.icon-definitions { position: fixed; width: 0; height: 0; overflow: hidden; }
+
+.icone svg {
+  display: block;
+  width: 25px;
+  height: 25px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.icone.tom-trabalho,
+.icone.tom-azul { color: #1677e8; background: rgba(22, 119, 232, 0.11); }
+.icone.tom-financas { color: #188b54; background: rgba(52, 199, 89, 0.13); }
+.icone.tom-academia { color: #d97706; background: rgba(255, 149, 0, 0.14); }
+.icone.tom-ajustes { color: #667085; background: rgba(142, 142, 147, 0.14); }
+.icone.tom-violeta { color: #7950c8; background: rgba(121, 80, 200, 0.12); }
+.icone.tom-laranja { color: #d97706; background: rgba(255, 149, 0, 0.14); }
+.icone.tom-rosa { color: #d34476; background: rgba(255, 45, 85, 0.11); }
+.icone.tom-turquesa { color: #078b91; background: rgba(0, 199, 190, 0.12); }
+
+.titulo-configuracao {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  margin-bottom: 6px;
+  font-size: 16px;
+  font-weight: 700;
+}
+.titulo-configuracao svg,
+.icone-acao {
+  width: 19px;
+  height: 19px;
+  flex: 0 0 auto;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.titulo-configuracao.perigo { color: var(--danger); }
+#btnExportarBackup,
+#btnImportarBackup,
+#btnResetarDados {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
+  text-align: center;
+}
 
 .lancamento {
   border: 1px solid var(--border-color);

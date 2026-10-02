@@ -1,4 +1,4 @@
-const CACHE_NAME = 'meu-app-v13-data-pagamento';
+const CACHE_NAME = 'meu-app-v14-icones-personalizados';
 const ASSETS_TO_CACHE = [
   './',
   './index.html',
