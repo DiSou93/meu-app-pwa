@@ -51,6 +51,8 @@
         <symbol id="icon-upload" viewBox="0 0 24 24"><path d="M12 16V4M7 9l5-5 5 5M4 18v3h16v-3"/></symbol>
         <symbol id="icon-warning" viewBox="0 0 24 24"><path d="M10.3 4.3 2.7 18a2 2 0 0 0 1.7 3h15.2a2 2 0 0 0 1.7-3L13.7 4.3a2 2 0 0 0-3.4 0Z"/><path d="M12 9v5M12 17h.01"/></symbol>
         <symbol id="icon-trash" viewBox="0 0 24 24"><path d="M3 6h18M8 6V4h8v2M6 6l1 15h10l1-15M10 10v7M14 10v7"/></symbol>
+        <symbol id="icon-other" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="2"/><rect x="14" y="3" width="7" height="7" rx="2"/><rect x="3" y="14" width="7" height="7" rx="2"/><path d="M14 17.5h7M17.5 14v7"/></symbol>
+        <symbol id="icon-games" viewBox="0 0 24 24"><rect x="2" y="6" width="20" height="14" rx="5"/><path d="M6 13h6M9 10v6M12 6V3h4M16 11h.01M19 15h.01"/></symbol>
     </svg>
 
     <div id="app">
@@ -89,6 +91,12 @@
                         <span class="icone tom-academia" aria-hidden="true"><svg><use href="#icon-gym"></use></svg></span>
                         <span class="titulo">Academia</span>
                         <span class="descricao">Fichas e cargas dos exercícios</span>
+                    </button>
+
+                    <button class="card" id="btnGames" data-modulo="games">
+                        <span class="icone tom-rosa" aria-hidden="true"><svg><use href="#icon-games"></use></svg></span>
+                        <span class="titulo">Games</span>
+                        <span class="descricao">Meus jogos e minhas platinas</span>
                     </button>
 
                     <button class="card" id="btnConfiguracoes">
@@ -413,8 +421,30 @@
 
 
         <!-- ========================= -->
-        <!-- TELA ACADEMIA -->
+        <!-- TELA GAMES -->
         <!-- ========================= -->
+        <section id="telaGames" class="tela" data-modulo-tela="games" hidden>
+            <header class="topo">
+                <h1>Games</h1>
+                <p>Seu acervo, no seu ritmo</p>
+            </header>
+            <main>
+                <div class="games-cabecalho">
+                    <div><h2>Meus jogos</h2><p id="gamesResumo"></p></div>
+                    <button id="btnNovoJogo" class="botao-principal" type="button">Adicionar jogo</button>
+                </div>
+                <div class="games-controles">
+                    <div class="campo-form"><label for="gamesBusca">Buscar jogo, plataforma ou gênero</label><input id="gamesBusca" type="search" placeholder="Ex: The Witcher ou PS5"></div>
+                    <div class="campo-form"><label for="gamesOrigemFiltro">Origem</label><select id="gamesOrigemFiltro"><option value="todos">Todas as origens</option><option value="comprado">Comprado</option><option value="psplus">PS Plus — resgatados</option><option value="outro">Outra origem</option></select></div>
+                </div>
+                <p class="games-ajuda">PS Plus identifica jogos resgatados pela assinatura, sem compromisso de jogar. Progresso e platina são independentes.</p>
+                <div id="gamesFiltros" class="games-filtros" role="group" aria-label="Filtrar jogos por progresso ou platina"></div>
+                <p id="gamesResultado" class="games-ajuda" role="status" aria-live="polite"></p>
+                <div id="gamesLista" class="games-lista"></div>
+            </main>
+        </section>
+
+        <!-- TELA ACADEMIA -->
         <section id="telaAcademia" class="tela" data-modulo-tela="academia" hidden>
             <header class="topo">
                 <h1>Academia</h1>
@@ -522,6 +552,11 @@
                         <span class="titulo">Trabalho</span>
                         <span class="descricao">Despesas durante o trabalho</span>
                     </button>
+                    <button class="card-financeiro" id="btnOutros" data-id="outros">
+                        <span class="icone tom-turquesa" aria-hidden="true"><svg><use href="#icon-other"></use></svg></span>
+                        <span class="titulo">Outros</span>
+                        <span class="descricao">Saúde e despesas diversas</span>
+                    </button>
                 </section>
             </main>
 
@@ -616,6 +651,7 @@
                             <label><input type="checkbox" id="mostrarModuloTrabalho" checked> Trabalho</label>
                             <label><input type="checkbox" id="mostrarModuloFinancas" checked> Finanças</label>
                             <label><input type="checkbox" id="mostrarModuloAcademia" checked> Academia</label>
+                            <label><input type="checkbox" id="mostrarModuloGames" checked> Games</label>
                         </div>
                     </div>
                     <hr style="border: none; border-top: 1px solid var(--border-color);">
@@ -674,6 +710,10 @@
             <button class="tab-item" id="tabAcademia" data-modulo="academia">
                 <span class="tab-icone" aria-hidden="true"><svg><use href="#icon-gym"></use></svg></span>
                 <span class="tab-rotulo">Academia</span>
+            </button>
+            <button class="tab-item" id="tabGames" data-modulo="games">
+                <span class="tab-icone" aria-hidden="true"><svg><use href="#icon-games"></use></svg></span>
+                <span class="tab-rotulo">Games</span>
             </button>
             <button class="tab-item" id="tabConfiguracoes">
                 <span class="tab-icone" aria-hidden="true"><svg><use href="#icon-settings"></use></svg></span>

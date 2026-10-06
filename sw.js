@@ -1,4 +1,4 @@
-const CACHE_NAME = 'meu-app-v14-icones-personalizados';
+const CACHE_NAME = 'meu-app-v17-games';
 const ASSETS_TO_CACHE = [
   './',
   './index.html',

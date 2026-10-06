@@ -417,13 +417,21 @@
   }
   
   .modal-overlay[hidden] { display: none !important; }
+
+  body.modal-aberto { overflow: hidden; }
   
   .modal-sheet {
     width: 100%;
     max-width: 600px;
+    max-height: calc(100vh - env(safe-area-inset-top, 0px) - 12px);
+    max-height: calc(100dvh - env(safe-area-inset-top, 0px) - 12px);
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+    overflow: hidden;
     background: var(--card-bg);
     border-radius: 28px 28px 0 0;
-    padding: 20px 20px 30px 20px;
+    padding: 20px 20px calc(20px + env(safe-area-inset-bottom, 0px));
     box-shadow: 0 -10px 30px rgba(0, 0, 0, 0.2);
     animation: slideUp 0.25s cubic-bezier(0.2, 0.8, 0.2, 1);
   }
@@ -434,6 +442,7 @@
   }
   
   .modal-handle {
+    flex-shrink: 0;
     width: 36px;
     height: 5px;
     background: var(--border-color);
@@ -442,6 +451,7 @@
   }
   
   .modal-titulo {
+    flex-shrink: 0;
     font-size: 18px;
     font-weight: 700;
     margin-bottom: 16px;
@@ -450,10 +460,17 @@
   
   .modal-conteudo {
     margin-bottom: 20px;
+    flex: 0 1 auto;
+    min-height: 0;
+    overflow-y: auto;
+    overscroll-behavior-y: contain;
+    -webkit-overflow-scrolling: touch;
+    overflow-wrap: anywhere;
   }
   
   .modal-acoes {
     display: flex;
+    flex-shrink: 0;
     flex-direction: column;
     gap: 10px;
   }
@@ -1053,6 +1070,43 @@ body { padding-bottom: calc(92px + env(safe-area-inset-bottom, 0px)); }
     -webkit-backdrop-filter: none;
     backdrop-filter: none;
   }
+}
+
+/* Games: conteúdo offline, filtros quebram linha e listas acompanham a página. */
+.games-cabecalho { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-bottom: 20px; }
+.games-cabecalho h2 { font-size: 21px; margin-bottom: 6px; }
+.games-cabecalho p, .games-meta, .games-ajuda { color: var(--text-muted); font-size: 13px; line-height: 1.5; }
+.games-cabecalho .botao-principal { width: auto; flex-shrink: 0; }
+.games-controles { display: grid; grid-template-columns: minmax(0, 2fr) minmax(0, 1fr); gap: 12px; }
+.games-controles > *, .games-card { min-width: 0; }
+.games-ajuda { margin: 10px 0 14px; }
+.games-filtros { display: flex; flex-wrap: wrap; gap: 8px; margin: 16px 0; }
+.games-filtros button { min-height: 44px; padding: 9px 12px; border: 1px solid var(--border-color); border-radius: 14px; background: var(--card-bg); color: var(--text-main); font: inherit; font-size: 13px; cursor: pointer; }
+.games-filtros button[aria-pressed="true"] { background: var(--accent); color: white; border-color: var(--accent); }
+.games-filtros button span { margin-left: 5px; font-weight: 700; }
+.games-lista { display: grid; grid-template-columns: minmax(0, 1fr); gap: 14px; }
+.games-card, .games-vazio { padding: 20px; border-radius: 20px; background: var(--card-bg); border: 1px solid var(--border-color); overflow-wrap: anywhere; }
+.games-vazio { grid-column: 1 / -1; line-height: 1.6; color: var(--text-muted); }
+.games-card h3 { font-size: 18px; line-height: 1.4; margin-bottom: 6px; }
+.games-etiquetas { display: flex; flex-wrap: wrap; gap: 6px; margin: 14px 0; }
+.games-etiquetas span { border: 1px solid var(--border-color); border-radius: 10px; padding: 5px 8px; font-size: 12px; }
+.games-etiquetas .games-platina { color: var(--accent); border-color: var(--accent); font-weight: 700; }
+.games-notas { margin: 14px 0; font-size: 14px; line-height: 1.6; }
+.games-notas summary { cursor: pointer; padding: 8px 0; }
+.games-notas p { white-space: pre-wrap; overflow-wrap: anywhere; }
+.games-acoes { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 16px; }
+.games-acoes button { width: auto; min-height: 44px; padding: 10px 18px; }
+.games-form { display: grid; gap: 14px; }
+.games-form small { display: block; color: var(--text-muted); line-height: 1.5; margin-top: 6px; }
+.games-form .games-ajuda { margin: 0; }
+.games-form textarea { resize: vertical; min-height: 100px; }
+.tab-item { min-width: 0; min-height: 44px; }
+@media (min-width: 768px) { .games-lista { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 480px) {
+  .games-cabecalho { align-items: stretch; flex-direction: column; }
+  .games-cabecalho .botao-principal { width: 100%; }
+  .games-controles { grid-template-columns: minmax(0, 1fr); }
+  .tab-item { font-size: 10px; }
 }
 
 /* Alinha o conteúdo interno de data/hora sem ampliar o controle. */

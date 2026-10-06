@@ -14,6 +14,8 @@ let turnosSalvos = JSON.parse(localStorage.getItem("meuAppTurnos")) || [];
 let redsSalvos = JSON.parse(localStorage.getItem("meuAppReds")) || [];
 let veiculosSalvos = JSON.parse(localStorage.getItem("meuAppVeiculos")) || [];
 let fichasAcademia = JSON.parse(localStorage.getItem("meuAppFichasAcademia")) || [];
+let jogos = JSON.parse(localStorage.getItem("meuAppJogos")) || [];
+if (!Array.isArray(jogos)) jogos = [];
 let modulosOcultos = JSON.parse(localStorage.getItem("meuAppModulosOcultos")) || [];
 
 let gastos = JSON.parse(localStorage.getItem("meuAppGastos")) || {
@@ -22,17 +24,20 @@ let gastos = JSON.parse(localStorage.getItem("meuAppGastos")) || {
     fixos: [],
     transporte: [],
     assinaturas: [],
-    trabalho: []
+    trabalho: [],
+    outros: []
 };
 
-// Compatibilidade com dados e backups anteriores à categoria Trabalho.
+// Compatibilidade com dados e backups anteriores às novas categorias.
 if (!Array.isArray(gastos.trabalho)) gastos.trabalho = [];
+if (!Array.isArray(gastos.outros)) gastos.outros = [];
 
 let ordemFinancas = JSON.parse(localStorage.getItem("meuAppOrdemFinancas")) || [
-    "entrada", "cartao", "fixos", "mercado", "transporte", "lazer", "assinaturas", "trabalho"
+    "entrada", "cartao", "fixos", "mercado", "transporte", "lazer", "assinaturas", "trabalho", "outros"
 ];
 
 if (!ordemFinancas.includes("trabalho")) ordemFinancas.push("trabalho");
+if (!ordemFinancas.includes("outros")) ordemFinancas.push("outros");
 
 let categoriaAtualGasto = null;
 
@@ -48,7 +53,8 @@ const configCategorias = {
     fixos: { titulo: "Gastos Fixos", subtitulo: "Aluguel, luz, água e contas da casa" },
     transporte: { titulo: "Transporte", subtitulo: "Combustível, manutenção e transporte" },
     assinaturas: { titulo: "Assinaturas", subtitulo: "Streaming e serviços recorrentes" },
-    trabalho: { titulo: "Trabalho", subtitulo: "Despesas durante o trabalho no mês selecionado" }
+    trabalho: { titulo: "Trabalho", subtitulo: "Despesas durante o trabalho no mês selecionado" },
+    outros: { titulo: "Outros", subtitulo: "Saúde e despesas diversas no mês selecionado" }
 };
 
 
@@ -62,6 +68,7 @@ const telaQualificacao = document.getElementById("telaQualificacao");
 const telaMeuTurno = document.getElementById("telaMeuTurno");
 const telaFinancas = document.getElementById("telaFinancas");
 const telaAcademia = document.getElementById("telaAcademia");
+const telaGames = document.getElementById("telaGames");
 const telaEntradas = document.getElementById("telaEntradas");
 const telaCartao = document.getElementById("telaCartao");
 const telaGastosGenerica = document.getElementById("telaGastosGenerica");
@@ -73,13 +80,14 @@ const todasTelas = [
     telaInicio, telaTrabalho, telaQualificacao, telaMeuTurno,
     telaHistoricoReds, telaVeiculos,
     telaFinancas, telaEntradas, telaCartao, telaGastosGenerica,
-    telaAcademia, telaConfiguracoes
+    telaAcademia, telaGames, telaConfiguracoes
 ];
 
 // Botões Principais da Tela Inicial
 const btnTrabalho = document.getElementById("btnTrabalho");
 const btnFinancas = document.getElementById("btnFinancas");
 const btnAcademia = document.getElementById("btnAcademia");
+const btnGames = document.getElementById("btnGames");
 const btnConfiguracoes = document.getElementById("btnConfiguracoes");
 
 // Botões do Submenu Trabalho
@@ -102,6 +110,7 @@ const btnTransporte = document.getElementById("btnTransporte");
 const btnLazer = document.getElementById("btnLazer");
 const btnAssinaturas = document.getElementById("btnAssinaturas");
 const btnGastosTrabalho = document.getElementById("btnGastosTrabalho");
+const btnOutros = document.getElementById("btnOutros");
 const btnNovaEntrada = document.getElementById("btnNovaEntrada");
 const btnNovoCartao = document.getElementById("btnNovoCartao");
 const btnNovaCompraParcelada = document.getElementById("btnNovaCompraParcelada");
@@ -116,8 +125,9 @@ const tabInicio = document.getElementById("tabInicio");
 const tabTrabalho = document.getElementById("tabTrabalho");
 const tabFinancas = document.getElementById("tabFinancas");
 const tabAcademia = document.getElementById("tabAcademia");
+const tabGames = document.getElementById("tabGames");
 const tabConfiguracoes = document.getElementById("tabConfiguracoes");
-const todasTabs = [tabInicio, tabTrabalho, tabFinancas, tabAcademia, tabConfiguracoes];
+const todasTabs = [tabInicio, tabTrabalho, tabFinancas, tabAcademia, tabGames, tabConfiguracoes];
 
 // Modal Bottom Sheet
 const modalOverlay = document.getElementById("modalOverlay");
@@ -238,18 +248,31 @@ function abrirModal(titulo, htmlConteudo, callbackConfirmar) {
     modalTitulo.textContent = titulo;
     modalConteudo.innerHTML = htmlConteudo;
     modalOverlay.hidden = false;
-    acaoModalAtual = callbackConfirmar;
+    acaoModalAtual = typeof callbackConfirmar === "function" ? callbackConfirmar : null;
+    btnModalConfirmar.textContent = acaoModalAtual ? "Confirmar" : "Concluir";
+    modalConteudo.scrollTop = 0;
+    document.body.classList.add("modal-aberto");
 }
 
 function fecharModal() {
     modalOverlay.hidden = true;
     modalConteudo.innerHTML = "";
     acaoModalAtual = null;
+    document.body.classList.remove("modal-aberto");
 }
 
-if (btnModalCancelar) btnModalCancelar.addEventListener("click", fecharModal);
+if (btnModalCancelar) {
+    btnModalCancelar.type = "button";
+    btnModalCancelar.addEventListener("click", (event) => {
+        event.preventDefault();
+        event.stopPropagation();
+        fecharModal();
+    });
+}
 if (btnModalConfirmar) {
-    btnModalConfirmar.addEventListener("click", () => {
+    btnModalConfirmar.type = "button";
+    btnModalConfirmar.addEventListener("click", (event) => {
+        event.preventDefault();
         try {
             if (acaoModalAtual && acaoModalAtual() === false) return;
             fecharModal();
@@ -1223,7 +1246,7 @@ function calcularTotalGastosCategorias() {
     let total = 0;
 
     // Gastos normais daquele mês
-    ["mercado", "lazer", "transporte", "trabalho"].forEach(categoria => {
+    ["mercado", "lazer", "transporte", "trabalho", "outros"].forEach(categoria => {
 
         const itens = gastos[categoria] || [];
 
@@ -1310,7 +1333,8 @@ function abrirDetalhamentoGastos() {
         lazer: "🎮 Lazer",
         transporte: "🚗 Transporte",
         assinaturas: "🔄 Assinaturas",
-        trabalho: "💼 Trabalho"
+        trabalho: "💼 Trabalho",
+        outros: "Outros"
     };
 
     const categorias = [
@@ -1319,7 +1343,8 @@ function abrirDetalhamentoGastos() {
         "lazer",
         "transporte",
         "assinaturas",
-        "trabalho"
+        "trabalho",
+        "outros"
     ];
 
     let html = "";
@@ -2009,7 +2034,7 @@ function abrirCategoriaGasto(categoriaKey) {
     atualizarListaGastosCategoria();
 }
 
-[btnMercado, btnLazer, btnFixos, btnTransporte, btnAssinaturas, btnGastosTrabalho].forEach(btn => {
+[btnMercado, btnLazer, btnFixos, btnTransporte, btnAssinaturas, btnGastosTrabalho, btnOutros].forEach(btn => {
     if (btn) {
         btn.addEventListener("click", () => abrirCategoriaGasto(btn.getAttribute("data-id")));
     }
@@ -2035,7 +2060,9 @@ if (btnNovoGastoCategoria) {
             placeholder="${
                 categoriaRecorrente
                     ? "Ex: Internet, Netflix"
-                    : "Ex: Compra quinzenal"
+                    : categoriaAtualGasto === "outros"
+                        ? "Ex: Farmácia, consulta ou presente"
+                        : "Ex: Compra quinzenal"
             }"
         >
     </div>
@@ -2312,20 +2339,161 @@ function aplicarOrdemSalvaFinancas() {
 
 
 // ========================================
+// MÓDULO: GAMES — PROGRESSO, PLATINA E ORIGEM INDEPENDENTES
+// ========================================
+const gamesLista = document.getElementById("gamesLista");
+const gamesFiltros = document.getElementById("gamesFiltros");
+const gamesBusca = document.getElementById("gamesBusca");
+const gamesOrigemFiltro = document.getElementById("gamesOrigemFiltro");
+const gamesProgresso = { nao_iniciado: "Não iniciado", jogando: "Jogando", finalizado: "Finalizado", pausado: "Pausado", abandonado: "Abandonado" };
+const gamesPlatina = { sem_planos: "Sem planos de platina", quero: "Quero platinar", em_andamento: "Platina em andamento", platinado: "Platinado", cancelada: "Platina cancelada", nao_aplicavel: "Sem platina / não se aplica" };
+const gamesOrigens = { comprado: "Comprado", psplus: "PS Plus — resgatado", outro: "Outra origem" };
+const gamesAbas = { todos: "Todos", jogando: "Jogando", finalizados: "Finalizados", quero_platinar: "Quero platinar", platinados: "Platinados", nao_iniciados: "Não iniciados", pausados: "Pausados", abandonados: "Abandonados" };
+let gamesFiltroAtual = "todos";
+
+function jogoNaAba(jogo, aba) {
+    switch (aba) {
+        case "jogando": return jogo.progresso === "jogando";
+        case "finalizados": return jogo.progresso === "finalizado";
+        case "quero_platinar": return ["quero", "em_andamento"].includes(jogo.platina);
+        case "platinados": return jogo.platina === "platinado";
+        case "nao_iniciados": return jogo.progresso === "nao_iniciado";
+        case "pausados": return jogo.progresso === "pausado";
+        case "abandonados": return jogo.progresso === "abandonado";
+        default: return true;
+    }
+}
+
+function textoBuscaGames(texto) {
+    return String(texto ?? "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLocaleLowerCase("pt-BR");
+}
+
+function filtrarJogos(lista, aba, busca, origem) {
+    const termo = textoBuscaGames(busca).trim();
+    return lista.filter(jogo => jogoNaAba(jogo, aba) &&
+        (origem === "todos" || jogo.origem === origem) &&
+        textoBuscaGames([jogo.titulo, jogo.plataforma, jogo.genero].join(" ")).includes(termo)
+    ).sort((a, b) => a.titulo.localeCompare(b.titulo, "pt-BR") || a.plataforma.localeCompare(b.plataforma, "pt-BR"));
+}
+
+function renderizarGames() {
+    if (!gamesLista || !gamesFiltros) return;
+    const origem = gamesOrigemFiltro.value;
+    const busca = gamesBusca.value;
+    const base = filtrarJogos(jogos, "todos", busca, origem);
+    const exibidos = base.filter(jogo => jogoNaAba(jogo, gamesFiltroAtual));
+    document.getElementById("gamesResumo").textContent = `${jogos.length} jogos · ${jogos.filter(j => j.platina === "platinado").length} platinados`;
+    gamesFiltros.innerHTML = Object.entries(gamesAbas).map(([chave, rotulo]) => `<button type="button" data-games-filtro="${chave}" aria-pressed="${gamesFiltroAtual === chave}">${rotulo} <span>${base.filter(j => jogoNaAba(j, chave)).length}</span></button>`).join("");
+    document.getElementById("gamesResultado").textContent = `${exibidos.length} jogo(s) nesta seleção. As contagens podem se sobrepor entre progresso e platina.`;
+    if (!exibidos.length) {
+        gamesLista.innerHTML = `<div class="games-vazio">${jogos.length ? "Nenhum jogo nesta seleção. Experimente outra aba, origem ou busca." : "Seu acervo começa aqui. Toque em Adicionar jogo para cadastrar o primeiro."}</div>`;
+        return;
+    }
+    const esc = escaparHTMLAcademia;
+    gamesLista.innerHTML = exibidos.map(jogo => `
+        <article class="games-card">
+            <h3>${esc(jogo.titulo)}</h3>
+            <p class="games-meta">${esc(jogo.plataforma)}${jogo.genero ? ` · ${esc(jogo.genero)}` : ""}</p>
+            <div class="games-etiquetas"><span>${esc(gamesProgresso[jogo.progresso])}</span><span${jogo.platina === "platinado" ? ' class="games-platina"' : ""}>${esc(gamesPlatina[jogo.platina])}</span><span>${esc(gamesOrigens[jogo.origem])}</span></div>
+            ${jogo.observacoes ? `<details class="games-notas"><summary>Anotações</summary><p>${esc(jogo.observacoes)}</p></details>` : ""}
+            <div class="games-acoes"><button type="button" class="botao-secundario" data-games-editar="${esc(jogo.id)}" aria-label="Editar ${esc(jogo.titulo)}">Editar</button><button type="button" class="botao-secundario" data-games-excluir="${esc(jogo.id)}" aria-label="Excluir ${esc(jogo.titulo)}">Excluir</button></div>
+        </article>`).join("");
+}
+
+function salvarJogos(novaLista) {
+    // Só atualiza a memória depois que a gravação local for bem-sucedida.
+    localStorage.setItem("meuAppJogos", JSON.stringify(novaLista));
+    jogos = novaLista;
+    renderizarGames();
+}
+
+function opcoesGames(opcoes, selecionada) {
+    return Object.entries(opcoes).map(([valor, rotulo]) => `<option value="${valor}"${valor === selecionada ? " selected" : ""}>${escaparHTMLAcademia(rotulo)}</option>`).join("");
+}
+
+function abrirFormularioJogo(jogo = null) {
+    const esc = escaparHTMLAcademia;
+    abrirModal(jogo ? "Editar jogo" : "Adicionar jogo", `
+        <div class="games-form">
+            <div class="campo-form"><label for="gameTitulo">Nome do jogo *</label><input id="gameTitulo" type="text" maxlength="160" value="${esc(jogo?.titulo)}" placeholder="Ex: The Witcher 3" required></div>
+            <div class="campo-form"><label for="gamePlataforma">Plataforma / versão *</label><input id="gamePlataforma" type="text" maxlength="80" value="${esc(jogo?.plataforma)}" placeholder="Ex: PS5, PS4 ou PC" required><small>Cadastre versões separadas se quiser acompanhar platinas diferentes.</small></div>
+            <div class="campo-form"><label for="gameGenero">Gênero</label><input id="gameGenero" type="text" maxlength="80" value="${esc(jogo?.genero)}" placeholder="Ex: RPG, ação, aventura"></div>
+            <div class="campo-form"><label for="gameOrigem">Origem *</label><select id="gameOrigem" required><option value="">Selecione</option>${opcoesGames(gamesOrigens, jogo?.origem)}</select></div>
+            <p class="games-ajuda">PS Plus significa resgatado pela assinatura. Isso não marca o jogo como comprado, jogando ou com intenção de platinar.</p>
+            <div class="campo-form"><label for="gameProgresso">Progresso</label><select id="gameProgresso">${opcoesGames(gamesProgresso, jogo?.progresso || "nao_iniciado")}</select></div>
+            <div class="campo-form"><label for="gamePlatina">Platina</label><select id="gamePlatina">${opcoesGames(gamesPlatina, jogo?.platina || "sem_planos")}</select></div>
+            <p class="games-ajuda">Finalizar e platinar são coisas distintas: você pode marcar Finalizado e manter a platina em andamento.</p>
+            <div class="campo-form"><label for="gameObservacoes">Anotações</label><textarea id="gameObservacoes" rows="4" maxlength="5000" placeholder="Troféus pendentes, dicas ou onde parei...">${esc(jogo?.observacoes)}</textarea></div>
+        </div>`, () => {
+        const valor = id => document.getElementById(id).value.trim();
+        const registro = {
+            id: jogo?.id || gerarIdAcademia(),
+            titulo: valor("gameTitulo"), plataforma: valor("gamePlataforma"), genero: valor("gameGenero"),
+            origem: valor("gameOrigem"), progresso: valor("gameProgresso"), platina: valor("gamePlatina"),
+            observacoes: valor("gameObservacoes"),
+            criadoEm: jogo?.criadoEm || new Date().toISOString(), atualizadoEm: new Date().toISOString()
+        };
+        if (!validarJogosBackup([registro])) {
+            alert("Informe nome, plataforma e origem válidos e confira os demais campos.");
+            return false;
+        }
+        salvarJogos(jogo ? jogos.map(item => item.id === jogo.id ? registro : item) : [...jogos, registro]);
+        if (!filtrarJogos([registro], gamesFiltroAtual, gamesBusca.value, gamesOrigemFiltro.value).length) {
+            document.getElementById("gamesResultado").textContent = "Jogo salvo. Ele não aparece nos filtros atuais; consulte Todos, Todas as origens e limpe a busca para encontrá-lo.";
+        }
+    });
+}
+
+function validarJogosBackup(lista) {
+    const texto = (valor, limite, obrigatorio = false) => typeof valor === "string" && valor.length <= limite && (!obrigatorio || valor.trim().length > 0);
+    return Array.isArray(lista) && lista.every(jogo => jogo &&
+        texto(jogo.id, 160, true) && texto(jogo.titulo, 160, true) && texto(jogo.plataforma, 80, true) &&
+        texto(jogo.genero, 80) && texto(jogo.observacoes, 5000) &&
+        Object.hasOwn(gamesOrigens, jogo.origem) && Object.hasOwn(gamesProgresso, jogo.progresso) && Object.hasOwn(gamesPlatina, jogo.platina)
+    ) && new Set(lista.map(jogo => jogo.id)).size === lista.length;
+}
+
+[btnGames, tabGames].forEach(botao => botao?.addEventListener("click", () => {
+    mostrarTela(telaGames, tabGames);
+    renderizarGames();
+}));
+document.getElementById("btnNovoJogo")?.addEventListener("click", () => abrirFormularioJogo());
+gamesBusca?.addEventListener("input", renderizarGames);
+gamesOrigemFiltro?.addEventListener("change", renderizarGames);
+gamesFiltros?.addEventListener("click", event => {
+    const botao = event.target.closest("[data-games-filtro]");
+    if (!botao) return;
+    gamesFiltroAtual = botao.dataset.gamesFiltro;
+    renderizarGames();
+    gamesFiltros.querySelector(`[data-games-filtro="${gamesFiltroAtual}"]`)?.focus({ preventScroll: true });
+});
+gamesLista?.addEventListener("click", event => {
+    const botao = event.target.closest("[data-games-editar], [data-games-excluir]");
+    if (!botao) return;
+    const jogo = jogos.find(item => item.id === (botao.dataset.gamesEditar || botao.dataset.gamesExcluir));
+    if (!jogo) return;
+    if (botao.dataset.gamesEditar) { abrirFormularioJogo(jogo); return; }
+    if (confirm(`Excluir “${jogo.titulo}” (${jogo.plataforma})? Isso remove somente este registro de Games.`)) {
+        try { salvarJogos(jogos.filter(item => item.id !== jogo.id)); }
+        catch (erro) { console.error(erro); alert("Não foi possível salvar a exclusão. O jogo foi mantido."); }
+    }
+});
+
+// ========================================
 // 10. MÓDULO: CONFIGURAÇÕES & BACKUP
 // ========================================
 
 function aplicarModulosOcultos() {
     const ocultos = new Set(modulosOcultos);
     document.querySelectorAll("[data-modulo]").forEach(el => { el.hidden = ocultos.has(el.dataset.modulo); });
-    const caixas = { trabalho: "mostrarModuloTrabalho", financas: "mostrarModuloFinancas", academia: "mostrarModuloAcademia" };
+    const caixas = { trabalho: "mostrarModuloTrabalho", financas: "mostrarModuloFinancas", academia: "mostrarModuloAcademia", games: "mostrarModuloGames" };
     Object.entries(caixas).forEach(([modulo, id]) => {
         const caixa = document.getElementById(id);
         if (caixa) caixa.checked = !ocultos.has(modulo);
     });
 }
 
-["trabalho", "financas", "academia"].forEach(modulo => {
+["trabalho", "financas", "academia", "games"].forEach(modulo => {
     const caixa = document.getElementById(`mostrarModulo${modulo[0].toUpperCase()}${modulo.slice(1)}`);
     caixa?.addEventListener("change", () => {
         modulosOcultos = modulosOcultos.filter(item => item !== modulo);
@@ -2354,12 +2522,11 @@ if (btnExportarBackup) {
             reds: JSON.parse(localStorage.getItem("meuAppReds")) || [],
             veiculosFiscalizados: JSON.parse(localStorage.getItem("meuAppVeiculos")) || [],
             fichasAcademia: JSON.parse(localStorage.getItem("meuAppFichasAcademia")) || [],
+            jogos: jogos,
             modulosOcultos: JSON.parse(localStorage.getItem("meuAppModulosOcultos")) || [],
             turnoAtivo: JSON.parse(localStorage.getItem("meuAppTurnoAtivo")) || null,
             dataExportacao: new Date().toISOString(),
-            ordemFinancas: JSON.parse(localStorage.getItem("meuAppOrdemFinancas")) || [
-            "entrada", "cartao", "fixos", "mercado", "transporte", "lazer", "assinaturas", "trabalho"
-            ],
+            ordemFinancas: [...ordemFinancas],
         };
 
         const blob = new Blob([JSON.stringify(dadosCompletos, null, 2)], { type: "application/json" });
@@ -2385,6 +2552,9 @@ if (btnImportarBackup && inputImportarBackup) {
         leitor.onload = (evento) => {
             try {
                 const dados = JSON.parse(evento.target.result);
+                if (Object.prototype.hasOwnProperty.call(dados, "jogos") && !validarJogosBackup(dados.jogos)) {
+                    throw new Error("Dados de Games inválidos no backup.");
+                }
                 if (confirm("Deseja substituir os dados atuais por este backup?")) {
                     if (dados.entradas) localStorage.setItem("meuAppEntradas", JSON.stringify(dados.entradas));
                     if (dados.cartoes) localStorage.setItem("meuAppCartoes", JSON.stringify(dados.cartoes));
@@ -2395,6 +2565,8 @@ if (btnImportarBackup && inputImportarBackup) {
                     if (Array.isArray(dados.reds)) localStorage.setItem("meuAppReds", JSON.stringify(dados.reds));
                     if (Array.isArray(dados.veiculosFiscalizados)) localStorage.setItem("meuAppVeiculos", JSON.stringify(dados.veiculosFiscalizados));
                     if (Array.isArray(dados.fichasAcademia)) localStorage.setItem("meuAppFichasAcademia", JSON.stringify(dados.fichasAcademia));
+                    // Backups antigos sem Games mantêm os jogos já cadastrados.
+                    if (Array.isArray(dados.jogos)) localStorage.setItem("meuAppJogos", JSON.stringify(dados.jogos));
                     if (Array.isArray(dados.modulosOcultos)) localStorage.setItem("meuAppModulosOcultos", JSON.stringify(dados.modulosOcultos));
                     if (Object.prototype.hasOwnProperty.call(dados, "turnoAtivo")) {
                         if (dados.turnoAtivo) {
