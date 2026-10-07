@@ -2605,12 +2605,118 @@ if (btnResetarDados) {
 // 11. REGISTRO DE SERVICE WORKER & INICIALIZAÇÃO
 // ========================================
 
-if ("serviceWorker" in navigator) {
-    window.addEventListener("load", () => {
-        navigator.serviceWorker.register("./sw.js")
-            .then(reg => console.log("[PWA] Service Worker registrado com sucesso:", reg.scope))
-            .catch(err => console.log("[PWA] Falha ao registrar Service Worker:", err));
+// Alterar junto com APP_VERSION em sw.js em cada publicação.
+const APP_VERSION = "18.0";
+const btnAtualizarApp = document.getElementById("btnAtualizarApp");
+const statusAtualizacao = document.getElementById("statusAtualizacao");
+const versaoApp = document.getElementById("versaoApp");
+if (versaoApp) versaoApp.textContent = `Versão instalada: ${APP_VERSION}`;
+let registroAppPromise = null;
+let buscandoAtualizacao = false;
+
+function informarAtualizacao(texto) {
+    if (statusAtualizacao) statusAtualizacao.textContent = texto;
+}
+
+function registrarApp() {
+    if (!registroAppPromise) {
+        registroAppPromise = navigator.serviceWorker.register("./sw.js", { updateViaCache: "none" }).then(reg => {
+            const avisar = () => {
+                if (reg.waiting && !buscandoAtualizacao) informarAtualizacao("Nova versão pronta. Toque em Buscar atualização para aplicar.");
+            };
+            reg.addEventListener("updatefound", () => reg.installing?.addEventListener("statechange", avisar));
+            avisar();
+            return reg;
+        }).catch(erro => { registroAppPromise = null; throw erro; });
+    }
+    return registroAppPromise;
+}
+
+function limitarEspera(promessa, ms = 25000) {
+    return new Promise((resolve, reject) => {
+        const timer = setTimeout(() => reject(new Error("Tempo de espera excedido.")), ms);
+        promessa.then(valor => { clearTimeout(timer); resolve(valor); }, erro => { clearTimeout(timer); reject(erro); });
     });
+}
+
+function aguardarInstalacao(worker) {
+    return new Promise((resolve, reject) => {
+        const timer = setTimeout(() => terminar(new Error("Download ainda não concluído.")), 30000);
+        function terminar(erro) {
+            clearTimeout(timer); worker.removeEventListener("statechange", verificar);
+            if (erro) reject(erro); else resolve();
+        }
+        function verificar() {
+            if (["installed", "activating", "activated"].includes(worker.state)) terminar();
+            else if (worker.state === "redundant") terminar(new Error("Falha ao baixar a versão completa."));
+        }
+        worker.addEventListener("statechange", verificar);
+        verificar();
+    });
+}
+
+function consultarVersaoWorker(worker) {
+    return new Promise((resolve, reject) => {
+        const canal = new MessageChannel();
+        const fechar = () => { clearTimeout(timer); canal.port1.close(); canal.port2.close(); };
+        const timer = setTimeout(() => { fechar(); reject(new Error("Não foi possível confirmar a versão.")); }, 5000);
+        canal.port1.onmessage = evento => { fechar(); resolve(evento.data?.version); };
+        try { worker.postMessage({ type: "GET_VERSION" }, [canal.port2]); }
+        catch (erro) { fechar(); reject(erro); }
+    });
+}
+
+function ativarAtualizacao(worker) {
+    return new Promise((resolve, reject) => {
+        const timer = setTimeout(() => terminar(new Error("Ativação não confirmada.")), 20000);
+        function terminar(erro) {
+            clearTimeout(timer); navigator.serviceWorker.removeEventListener("controllerchange", verificar);
+            if (erro) reject(erro); else resolve();
+        }
+        function verificar() { if (navigator.serviceWorker.controller === worker) terminar(); }
+        navigator.serviceWorker.addEventListener("controllerchange", verificar);
+        try { worker.postMessage({ type: "SKIP_WAITING" }); verificar(); }
+        catch (erro) { terminar(erro); }
+    });
+}
+
+async function buscarAtualizacaoApp() {
+    if (buscandoAtualizacao) return;
+    if (!("serviceWorker" in navigator)) { informarAtualizacao("Abra o app pelo endereço publicado no Safari ou pelo ícone da tela inicial para atualizar."); return; }
+    if (navigator.onLine === false) { informarAtualizacao("Você está offline. Conecte-se à internet para buscar atualizações. O app continua disponível."); return; }
+    buscandoAtualizacao = true;
+    if (btnAtualizarApp) btnAtualizarApp.disabled = true;
+    informarAtualizacao("Buscando atualização…");
+    try {
+        const reg = await limitarEspera(registrarApp());
+        if (!reg.waiting) await limitarEspera(reg.update());
+        if (reg.installing) { informarAtualizacao("Baixando a nova versão…"); await aguardarInstalacao(reg.installing); }
+        const worker = reg.waiting || reg.active;
+        if (!worker) throw new Error("Preparação offline ainda não concluída.");
+        const versao = await consultarVersaoWorker(worker);
+        if (!versao) throw new Error("Versão não identificada.");
+        if (!reg.waiting && versao === APP_VERSION && navigator.serviceWorker.controller === worker) {
+            informarAtualizacao(`Você já está na versão mais recente disponível (${APP_VERSION}).`); return;
+        }
+        informarAtualizacao(`Versão ${versao} pronta para aplicar.`);
+        if (!confirm(`Aplicar a versão ${versao} agora? O app será recarregado.\n\nSeus registros salvos serão mantidos. Salve antes qualquer preenchimento ainda não concluído.`)) {
+            informarAtualizacao("Atualização pronta. Toque em Buscar atualização quando quiser aplicar."); return;
+        }
+        informarAtualizacao("Aplicando atualização…");
+        if (navigator.serviceWorker.controller !== worker) await ativarAtualizacao(worker);
+        window.location.reload();
+    } catch (erro) {
+        console.error("[PWA] Atualização:", erro);
+        informarAtualizacao("Não foi possível concluir a atualização. Confira a conexão e tente novamente. Se persistir, feche e reabra o app. Seus dados salvos foram mantidos.");
+    } finally {
+        buscandoAtualizacao = false;
+        if (btnAtualizarApp) btnAtualizarApp.disabled = false;
+    }
+}
+
+btnAtualizarApp?.addEventListener("click", buscarAtualizacaoApp);
+if ("serviceWorker" in navigator) {
+    window.addEventListener("load", () => registrarApp().catch(erro => console.log("[PWA] Registro indisponível:", erro)));
 }
 
 document.addEventListener("DOMContentLoaded", () => {
