@@ -11,7 +11,7 @@
     <meta http-equiv="Expires" content="0" />
 
     <!-- Configurações PWA e Visual Nativo iPad/iOS -->
-    <meta name="theme-color" content="#111827">
+    <meta name="theme-color" content="#101010">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="Meu App">
@@ -144,7 +144,7 @@
                     <button class="card" id="btnVeiculos">
                         <span class="icone tom-azul" aria-hidden="true"><svg><use href="#icon-car"></use></svg></span>
                         <span class="titulo">Veículos</span>
-                        <span class="descricao">Veículos e abordados da fiscalização</span>
+                        <span class="descricao">Placa, identificação e observações</span>
                     </button>
                 </section>
             </main>
@@ -397,18 +397,32 @@
             <header class="topo">
                 <button id="btnVoltarVeiculos" class="botao-voltar">← Voltar</button>
                 <h1>Veículos</h1>
-                <p>Fiscalização e abordados</p>
+                <p>Identificação e observações do veículo</p>
             </header>
         
             <main>
                 <form id="formVeiculo" class="formulario-qualificacao">
-                    <h2>Cadastrar veículo</h2>
-                    <p style="font-size:13px;color:var(--text-muted);">Os registros ficam neste aparelho. O backup JSON inclui os CPFs cadastrados.</p>
+                    <h2 id="tituloFormVeiculo">Cadastrar veículo</h2>
+                    <p style="font-size:13px;color:var(--text-muted);">Os registros ficam neste aparelho e são incluídos no backup.</p>
                     <div class="campo-form">
                         <label for="vPlaca">Placa</label>
                         <input type="text" id="vPlaca" placeholder="ABC1D23" autocapitalize="characters" maxlength="8" required>
                     </div>
-                    <button type="submit" class="botao-principal">＋ Adicionar veículo</button>
+                    <div class="campo-form">
+                        <label for="vMarcaModelo">Marca/modelo</label>
+                        <input type="text" id="vMarcaModelo" placeholder="Ex: Honda / Civic" maxlength="120">
+                    </div>
+                    <div class="campo-form">
+                        <label for="vCor">Cor</label>
+                        <input type="text" id="vCor" placeholder="Ex: Preto" maxlength="60">
+                    </div>
+                    <div class="campo-form">
+                        <label for="vObservacoes">Observações</label>
+                        <textarea id="vObservacoes" rows="4" placeholder="Informações adicionais sobre o veículo" maxlength="5000"></textarea>
+                    </div>
+                    <button id="btnSalvarVeiculo" type="submit" class="botao-principal">Salvar veículo</button>
+                    <button id="btnCopiarVeiculo" type="button" class="botao-secundario">Copiar resumo</button>
+                    <button id="btnLimparVeiculo" type="button" class="botao-secundario">Limpar campos</button>
                 </form>
 
                 <hr style="margin:24px 0;border:none;border-top:1px solid var(--border-color);">

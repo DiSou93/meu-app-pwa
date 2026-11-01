@@ -709,14 +709,59 @@ document.getElementById("btnLimparReds")?.addEventListener("click", limparFormRe
 // ========================================
 
 const formVeiculo = document.getElementById("formVeiculo");
+let edicaoVeiculoId = null;
 
-function salvarVeiculos() {
-    localStorage.setItem("meuAppVeiculos", JSON.stringify(veiculosSalvos));
+function normalizarPlaca(valor) {
+    return String(valor || "").toUpperCase().replace(/[^A-Z0-9]/g, "");
 }
 
-function formatarCpfVeiculo(cpf) {
-    const digitos = String(cpf || "").replace(/\D/g, "").slice(0, 11);
-    return digitos.length === 11 ? digitos.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, "$1.$2.$3-$4") : digitos;
+function obterDadosVeiculo() {
+    return {
+        placa: normalizarPlaca(document.getElementById("vPlaca").value),
+        marcaModelo: document.getElementById("vMarcaModelo").value.trim(),
+        cor: document.getElementById("vCor").value.trim(),
+        observacoes: document.getElementById("vObservacoes").value.trim()
+    };
+}
+
+function gerarTextoVeiculo(dados) {
+    return `*VEÍCULO*
+Placa: ${dados.placa || "N/I"}
+Marca/modelo: ${dados.marcaModelo || "N/I"}
+Cor: ${dados.cor || "N/I"}
+Observações: ${dados.observacoes || "N/I"}`;
+}
+
+function salvarListaVeiculos(novaLista) {
+    try {
+        localStorage.setItem("meuAppVeiculos", JSON.stringify(novaLista));
+        veiculosSalvos = novaLista;
+        return true;
+    } catch (erro) {
+        console.error(erro);
+        alert("Não foi possível salvar. Seus campos foram mantidos; tente novamente.");
+        return false;
+    }
+}
+
+function terminarEdicaoVeiculo() {
+    edicaoVeiculoId = null;
+    formVeiculo.reset();
+    document.getElementById("tituloFormVeiculo").textContent = "Cadastrar veículo";
+    document.getElementById("btnSalvarVeiculo").textContent = "Salvar veículo";
+    document.getElementById("btnLimparVeiculo").textContent = "Limpar campos";
+}
+
+function editarVeiculo(veiculo) {
+    edicaoVeiculoId = veiculo.id;
+    document.getElementById("vPlaca").value = veiculo.placa || "";
+    document.getElementById("vMarcaModelo").value = veiculo.marcaModelo || "";
+    document.getElementById("vCor").value = veiculo.cor || "";
+    document.getElementById("vObservacoes").value = veiculo.observacoes || "";
+    document.getElementById("tituloFormVeiculo").textContent = "Editar veículo";
+    document.getElementById("btnSalvarVeiculo").textContent = "Salvar alterações";
+    document.getElementById("btnLimparVeiculo").textContent = "Cancelar edição";
+    formVeiculo.scrollIntoView({ behavior: "smooth", block: "start" });
 }
 
 function renderizarVeiculos() {
@@ -727,118 +772,75 @@ function renderizarVeiculos() {
         const vazio = document.createElement("p");
         vazio.textContent = "Nenhum veículo registrado.";
         lista.appendChild(vazio);
-        return;
     }
-
     veiculosSalvos.forEach(veiculo => {
         const card = document.createElement("article");
-        card.className = "lancamento";
-        card.style.cssText = "display:flex;flex-direction:column;align-items:stretch;gap:12px;";
-        const topo = document.createElement("div");
-        topo.style.cssText = "display:flex;justify-content:space-between;align-items:center;gap:8px;";
-        const placa = document.createElement("strong");
-        placa.textContent = veiculo.placa;
-        const contador = document.createElement("span");
-        contador.style.cssText = "font-size:13px;color:var(--text-muted);";
-        contador.textContent = `${(veiculo.abordados || []).length} abordado(s)`;
-        topo.append(placa, contador);
-
-        const formPessoa = document.createElement("form");
-        formPessoa.className = "formulario-qualificacao";
-        formPessoa.style.cssText = "padding:12px;box-shadow:none;border:1px solid var(--border-color);gap:10px;";
-        const nomeCampo = document.createElement("div");
-        nomeCampo.className = "campo-form";
-        const nomeLabel = document.createElement("label");
-        nomeLabel.textContent = "Primeiro nome";
-        const nomeInput = document.createElement("input");
-        nomeInput.type = "text";
-        nomeInput.placeholder = "Nome";
-        nomeInput.autocomplete = "off";
-        nomeInput.required = true;
-        nomeCampo.append(nomeLabel, nomeInput);
-        const cpfCampo = document.createElement("div");
-        cpfCampo.className = "campo-form";
-        const cpfLabel = document.createElement("label");
-        cpfLabel.textContent = "CPF";
-        const cpfInput = document.createElement("input");
-        cpfInput.type = "text";
-        cpfInput.inputMode = "numeric";
-        cpfInput.placeholder = "000.000.000-00";
-        cpfInput.maxLength = 14;
-        cpfInput.autocomplete = "off";
-        cpfInput.required = true;
-        cpfCampo.append(cpfLabel, cpfInput);
-        const addPessoa = document.createElement("button");
-        addPessoa.type = "submit";
-        addPessoa.className = "botao-secundario";
-        addPessoa.textContent = "＋ Adicionar abordado";
-        formPessoa.append(nomeCampo, cpfCampo, addPessoa);
-        formPessoa.addEventListener("submit", event => {
-            event.preventDefault();
-            const nome = nomeInput.value.trim().split(/\s+/)[0];
-            const cpf = cpfInput.value.replace(/\D/g, "");
-            if (!nome) return alert("Informe o primeiro nome.");
-            if (cpf.length !== 11) return alert("Confira o CPF: informe os 11 dígitos.");
-            veiculo.abordados = veiculo.abordados || [];
-            veiculo.abordados.push({ id: Date.now(), nome, cpf });
-            salvarVeiculos();
-            renderizarVeiculos();
-        });
-
-        const pessoas = document.createElement("div");
-        pessoas.className = "lista-lancamentos";
-        (veiculo.abordados || []).forEach(pessoa => {
-            const linha = document.createElement("div");
-            linha.className = "lancamento";
-            linha.style.cssText = "padding:10px 12px;gap:8px;";
-            const detalhe = document.createElement("span");
-            detalhe.style.fontSize = "13px";
-            detalhe.textContent = `${pessoa.nome} • CPF ${formatarCpfVeiculo(pessoa.cpf)}`;
-            const remover = document.createElement("button");
-            remover.type = "button";
-            remover.className = "botao-excluir";
-            remover.textContent = "Excluir";
-            remover.addEventListener("click", () => {
-                veiculo.abordados = veiculo.abordados.filter(item => item.id !== pessoa.id);
-                salvarVeiculos();
-                renderizarVeiculos();
+        card.className = "lancamento veiculo-registro";
+        const esc = escaparHTMLAcademia;
+        card.innerHTML = `<h3>${esc(veiculo.placa)}</h3>
+            <p><strong>Marca/modelo:</strong> ${esc(veiculo.marcaModelo || "Não informado")}</p>
+            <p><strong>Cor:</strong> ${esc(veiculo.cor || "Não informada")}</p>
+            <p class="veiculo-observacoes"><strong>Observações:</strong> ${esc(veiculo.observacoes || "Nenhuma")}</p>`;
+        // Mantém os dados da versão anterior acessíveis e incluídos no backup.
+        if (Array.isArray(veiculo.abordados) && veiculo.abordados.length) {
+            const antigos = document.createElement("details");
+            const titulo = document.createElement("summary");
+            titulo.textContent = `Abordados do cadastro anterior (${veiculo.abordados.length})`;
+            antigos.appendChild(titulo);
+            veiculo.abordados.forEach(pessoa => {
+                const linha = document.createElement("p");
+                linha.textContent = `${pessoa.nome || "N/I"} · CPF: ${pessoa.cpf || "N/I"}`;
+                antigos.appendChild(linha);
             });
-            linha.append(detalhe, remover);
-            pessoas.appendChild(linha);
-        });
-
-        const excluirVeiculo = document.createElement("button");
-        excluirVeiculo.type = "button";
-        excluirVeiculo.className = "botao-excluir";
-        excluirVeiculo.textContent = "Excluir veículo e abordados";
-        excluirVeiculo.addEventListener("click", () => {
-            if (!confirm(`Excluir ${veiculo.placa} e todos os abordados cadastrados nele?`)) return;
-            veiculosSalvos = veiculosSalvos.filter(item => item.id !== veiculo.id);
-            salvarVeiculos();
+            card.appendChild(antigos);
+        }
+        const acoes = document.createElement("div");
+        acoes.className = "veiculo-acoes";
+        const botao = (rotulo, acao) => {
+            const el = document.createElement("button");
+            el.type = "button";
+            el.className = "botao-secundario";
+            el.textContent = rotulo;
+            el.addEventListener("click", acao);
+            acoes.appendChild(el);
+        };
+        botao("Editar", () => editarVeiculo(veiculo));
+        botao("Copiar", () => copiarTextoFormatado(gerarTextoVeiculo(veiculo), "Veículo copiado!"));
+        botao("Excluir", () => {
+            const legado = veiculo.abordados?.length ? " Os abordados do cadastro anterior também serão removidos." : "";
+            if (!confirm(`Excluir o veículo ${veiculo.placa}?${legado}`)) return;
+            if (!salvarListaVeiculos(veiculosSalvos.filter(item => item.id !== veiculo.id))) return;
+            if (edicaoVeiculoId === veiculo.id) terminarEdicaoVeiculo();
             renderizarVeiculos();
         });
-        card.append(topo, formPessoa, pessoas, excluirVeiculo);
+        card.appendChild(acoes);
         lista.appendChild(card);
     });
 }
 
-if (formVeiculo) {
-    formVeiculo.addEventListener("submit", event => {
-        event.preventDefault();
-        const input = document.getElementById("vPlaca");
-        const placa = input.value.trim().toUpperCase().replace(/\s+/g, "");
-        if (!placa) return alert("Informe a placa do veículo.");
-        if (veiculosSalvos.some(item => item.placa === placa)) {
-            input.value = "";
-            renderizarVeiculos();
-            return alert("Essa placa já está cadastrada. Adicione os abordados no veículo existente.");
-        }
-        veiculosSalvos.unshift({ id: Date.now(), placa, abordados: [] });
-        salvarVeiculos();
-        formVeiculo.reset();
-        renderizarVeiculos();
-    });
-}
+formVeiculo?.addEventListener("submit", event => {
+    event.preventDefault();
+    const dados = obterDadosVeiculo();
+    if (!dados.placa) return alert("Informe a placa do veículo.");
+    if (veiculosSalvos.some(item => normalizarPlaca(item.placa) === dados.placa && item.id !== edicaoVeiculoId)) {
+        return alert("Essa placa já está cadastrada. Use Editar no registro existente.");
+    }
+    const editando = edicaoVeiculoId !== null;
+    if (editando && !veiculosSalvos.some(item => item.id === edicaoVeiculoId)) return alert("Registro não encontrado. Cancele a edição e tente novamente.");
+    const novaLista = editando
+        ? veiculosSalvos.map(item => item.id === edicaoVeiculoId ? { ...item, ...dados } : item)
+        : [{ id: gerarIdAcademia(), ...dados }, ...veiculosSalvos];
+    if (!salvarListaVeiculos(novaLista)) return;
+    terminarEdicaoVeiculo();
+    renderizarVeiculos();
+    alert(editando ? "Veículo atualizado!" : "Veículo salvo!");
+});
+document.getElementById("btnLimparVeiculo")?.addEventListener("click", terminarEdicaoVeiculo);
+document.getElementById("btnCopiarVeiculo")?.addEventListener("click", () => {
+    const dados = obterDadosVeiculo();
+    if (!dados.placa) return alert("Informe a placa antes de copiar.");
+    copiarTextoFormatado(gerarTextoVeiculo(dados), "Veículo copiado!");
+});
 
 
 // ========================================
@@ -2606,7 +2608,7 @@ if (btnResetarDados) {
 // ========================================
 
 // Alterar junto com APP_VERSION em sw.js em cada publicação.
-const APP_VERSION = "18.0";
+const APP_VERSION = "19.0";
 const btnAtualizarApp = document.getElementById("btnAtualizarApp");
 const statusAtualizacao = document.getElementById("statusAtualizacao");
 const versaoApp = document.getElementById("versaoApp");

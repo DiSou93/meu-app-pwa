@@ -1109,6 +1109,45 @@ body { padding-bottom: calc(92px + env(safe-area-inset-bottom, 0px)); }
   .tab-item { font-size: 10px; }
 }
 
+/* Tema 19: preto, grafite e dourado — consistente em ambos os modos do sistema. */
+:root {
+  color-scheme: dark;
+  --bg-app: #101010;
+  --card-bg: #1d1d1d;
+  --primary: #242424;
+  --text-main: #f3f1eb;
+  --text-muted: #b5b2aa;
+  --border-color: #404040;
+  --accent: #d6b86c;
+  --danger: #ff8585;
+  --success: #71d6a4;
+  --warning: #efc276;
+}
+body { background-color: var(--bg-app); background-image: radial-gradient(ellipse at 50% -18%, rgba(214,184,108,.07), transparent 52%); }
+.topo { background: linear-gradient(135deg, #101010, #252525 65%, #343027); box-shadow: 0 12px 28px rgba(0,0,0,.25); border-bottom: 1px solid #53472d; }
+.topo p { color: #c8c4ba; }
+.card, .card-financeiro, .saldo, .seletor-mes, .navegacao-mes,
+.formulario-qualificacao, .lancamento, .academia-vazio, .academia-ficha, .games-card {
+  background: var(--card-bg); border-color: var(--border-color); box-shadow: 0 6px 20px rgba(0,0,0,.16);
+}
+.botao-principal { background: linear-gradient(135deg, #d6b86c, #bea05b); color: #17140d; box-shadow: 0 6px 16px rgba(0,0,0,.22); }
+.botao-secundario { background: #292929; color: var(--text-main); border-color: #494949; }
+.tab-bar { background: rgba(20,20,20,.94); border-top-color: #414141; box-shadow: 0 -8px 24px rgba(0,0,0,.22); }
+.modal-sheet { background: #202020; border-color: #484848; }
+.icone, .icone[class*="tom-"] { color: var(--accent); background: rgba(214,184,108,.12); }
+.academia-aba.ativa, .games-filtros button[aria-pressed="true"] { background: var(--accent); color: #17140d; }
+.campo-form input, .campo-form select, .campo-form textarea { background: #151515; color: var(--text-main); border-color: #505050; }
+.campo-form input::placeholder, .campo-form textarea::placeholder { color: #96938b; opacity: 1; }
+button:focus-visible, summary:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+.veiculo-registro { display: flex; flex-direction: column; align-items: stretch; gap: 10px; overflow-wrap: anywhere; }
+.veiculo-observacoes { white-space: pre-wrap; }
+.veiculo-registro details { color: var(--text-muted); font-size: 13px; line-height: 1.6; }
+.veiculo-registro summary { cursor: pointer; padding: 8px 0; }
+.veiculo-acoes { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 6px; }
+.veiculo-acoes button { width: auto; min-height: 44px; padding: 10px 16px; }
+#formVeiculo { scroll-margin-top: 16px; }
+@media (prefers-reduced-transparency: reduce) { .tab-bar { background: #141414; } }
+
 /* Alinha o conteúdo interno de data/hora sem ampliar o controle. */
 .campo-form input[type="date"]::-webkit-date-and-time-value,
 .campo-form input[type="time"]::-webkit-date-and-time-value,
