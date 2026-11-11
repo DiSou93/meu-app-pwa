@@ -1815,18 +1815,19 @@ function abrirCadastroCompra({ categoria = "outros", parceladaNoCartao = false, 
     const esc = escaparHTMLAcademia;
     const mesTela = obterCompetenciaAtual();
     const dataInicial = compra ? compra.dataCompra || "" : dataCompraInicial(mesTela);
-    const categoriaInicial = compra ? compra.categoria || "" : categoria;
+    const categoriaInicial = compra ? (compraTemCategoria(compra) ? compra.categoria : "") : categoria;
     const cartoesDisponiveis = [...new Set([...cartoes, ...(compra?.cartao ? [compra.cartao] : [])])];
     const opcoesCartao = cartoesDisponiveis.map(cartao =>
         `<option value="${esc(cartao)}"${compra?.cartao === cartao ? " selected" : ""}>${esc(cartao)}</option>`
     ).join("");
-    const opcoesCategoria = categoriasCompra.map(chave =>
+    const opcoesCategoria = `<option value=""${categoriaInicial === "" ? " selected" : ""}>${compra ? "Sem categoria (Cartão)" : "Cartão"}</option>` +
+        categoriasCompra.map(chave =>
         `<option value="${chave}"${categoriaInicial === chave ? " selected" : ""}>${nomeCategoriaCompra(chave)}</option>`
     ).join("");
-    const minimoParcelas = parceladaNoCartao ? 2 : 1;
-    const parcelaInicial = Number(compra?.parcelas || minimoParcelas);
-    const opcoesParcelas = Array.from({ length: 25 - minimoParcelas }, (_, i) =>
-        `<option value="${i + minimoParcelas}"${parcelaInicial === i + minimoParcelas ? " selected" : ""}>${i + minimoParcelas}x</option>`
+    const primeiraOpcao = parceladaNoCartao ? 2 : 1;
+    const parcelaInicial = Number(compra?.parcelas || primeiraOpcao);
+    const opcoesParcelas = Array.from({ length: 25 - primeiraOpcao }, (_, i) =>
+        `<option value="${i + primeiraOpcao}"${parcelaInicial === i + primeiraOpcao ? " selected" : ""}>${i + primeiraOpcao}x</option>`
     ).join("");
 
     abrirModal(compra ? "Editar compra" : parceladaNoCartao ? "Nova compra parcelada" : "Nova compra", `
@@ -1835,7 +1836,7 @@ function abrirCadastroCompra({ categoria = "outros", parceladaNoCartao = false, 
             <div class="campo-form"><label for="compraValor">Valor total (R$)</label><input id="compraValor" type="number" min="0.01" step="0.01" inputmode="decimal" value="${esc(compra?.valorTotal)}"></div>
             <div class="campo-form"><label for="compraData">Data da compra</label><input id="compraData" type="date" value="${esc(dataInicial)}"></div>
             ${compra && !dataInicial ? '<p class="financas-nota">Compra antiga sem data. Preencha se souber a data original.</p>' : ""}
-            ${parceladaNoCartao ? "" : `<div class="campo-form"><label for="compraCategoria">Categoria</label><select id="compraCategoria">${compra ? '<option value="">Sem categoria (Cartão)</option>' : ""}${opcoesCategoria}</select></div>`}
+            ${parceladaNoCartao ? "" : `<div class="campo-form"><label for="compraCategoria">Categoria</label><select id="compraCategoria">${opcoesCategoria}</select></div>`}
             <div class="campo-form"><label for="compraPagamento">Pagamento</label><select id="compraPagamento"${parceladaNoCartao || compra ? " disabled" : ""}><option value="credito">Crédito</option><option value="debito">Débito</option><option value="pix">Pix</option></select></div>
             <div id="compraCamposCredito" class="games-form">
                 <div class="campo-form"><label for="compraCartao">Cartão</label><select id="compraCartao">${opcoesCartao || '<option value="">Nenhum cartão cadastrado</option>'}</select></div>
@@ -1849,7 +1850,7 @@ function abrirCadastroCompra({ categoria = "outros", parceladaNoCartao = false, 
         const centavos = Math.round(valor * 100);
         const dataCompra = campo("compraData").value;
         const categoriaEscolhida = parceladaNoCartao ? "" : campo("compraCategoria").value;
-        const metodoPagamento = parceladaNoCartao || compra ? "credito" : campo("compraPagamento").value;
+        const metodoPagamento = destinoCartao() || compra ? "credito" : campo("compraPagamento").value;
         const dataOpcional = compra && !compra.dataCompra && !dataCompra;
         if (!descricao || !Number.isSafeInteger(centavos) || centavos <= 0 ||
             Math.abs(valor * 100 - centavos) > 0.00001 ||
@@ -1858,7 +1859,7 @@ function abrirCadastroCompra({ categoria = "outros", parceladaNoCartao = false, 
             return false;
         }
         if (!Object.hasOwn(nomesPagamento, metodoPagamento) ||
-            (!categoriasCompra.includes(categoriaEscolhida) && !((parceladaNoCartao || compra) && !categoriaEscolhida))) {
+            (!categoriasCompra.includes(categoriaEscolhida) && !destinoCartao())) {
             alert("Confira a categoria e a forma de pagamento.");
             return false;
         }
@@ -1867,6 +1868,7 @@ function abrirCadastroCompra({ categoria = "outros", parceladaNoCartao = false, 
             const cartao = campo("compraCartao").value;
             const parcelas = Number(campo("compraParcelas").value);
             const competencia = campo("compraCobranca").value.trim();
+            const minimoParcelas = minimoParcelasDoDestino();
             if (!cartoesDisponiveis.includes(cartao) || !Number.isInteger(parcelas) || parcelas < minimoParcelas || parcelas > 24 ||
                 !dataCompraValida(`${competencia}-01`) ||
                 (competenciaOrigem && competencia < competenciaOrigem)) {
@@ -1899,9 +1901,22 @@ function abrirCadastroCompra({ categoria = "outros", parceladaNoCartao = false, 
     });
 
     const campo = id => document.getElementById(id);
+    const destinoCartao = () => parceladaNoCartao || campo("compraCategoria").value === "";
+    // Permite editar uma compra antiga de 1x já registrada em Cartão.
+    const unicaAntigaNoCartao = compra && !compraTemCategoria(compra) && Number(compra.parcelas) === 1;
+    const minimoParcelasDoDestino = () => destinoCartao() && !unicaAntigaNoCartao ? 2 : 1;
     let cobrancaAjustada = Boolean(compra);
     const atualizarPrevia = () => {
-        const credito = campo("compraPagamento").value === "credito";
+        const noCartao = destinoCartao();
+        const pagamento = campo("compraPagamento");
+        const seletorParcelas = campo("compraParcelas");
+        pagamento.disabled = noCartao || Boolean(compra);
+        if (pagamento.disabled) pagamento.value = "credito";
+        const credito = pagamento.value === "credito";
+        const minimo = minimoParcelasDoDestino();
+        const opcao1x = seletorParcelas.querySelector('option[value="1"]');
+        if (opcao1x) opcao1x.hidden = opcao1x.disabled = minimo === 2;
+        if (minimo === 2 && seletorParcelas.value === "1") seletorParcelas.value = "2";
         const data = campo("compraData").value;
         const origem = dataCompraValida(data) ? data.slice(0, 7) : "";
         campo("compraCamposCredito").hidden = !credito;
@@ -1909,7 +1924,7 @@ function abrirCadastroCompra({ categoria = "outros", parceladaNoCartao = false, 
         const valor = Number(campo("compraValor").value);
         const parcelas = Number(campo("compraParcelas").value);
         campo("compraPrevia").textContent = credito
-            ? !cartoesDisponiveis.length ? "Cadastre um cartão em Finanças → Cartão ou escolha Débito/Pix."
+            ? !cartoesDisponiveis.length ? `Cadastre um cartão em Finanças → Cartão${pagamento.disabled ? "" : " ou escolha Débito/Pix"}.`
             : `Primeira cobrança: ${dataCompraValida(cobranca + "-01") ? rotuloCompetencia(cobranca) : "informe o mês"}${valor > 0 ? " · Cerca de " + formatarMoeda(valor / parcelas) + " por parcela" : ""}.`
             : origem ? `Pagamento em ${rotuloCompetencia(origem)}.` : "Informe a data da compra para definir o mês do pagamento.";
     };
@@ -1921,6 +1936,7 @@ function abrirCadastroCompra({ categoria = "outros", parceladaNoCartao = false, 
     campo("compraCobranca").addEventListener("input", () => { cobrancaAjustada = true; atualizarPrevia(); });
     campo("compraCobranca").addEventListener("change", () => { cobrancaAjustada = true; atualizarPrevia(); });
     campo("compraPagamento").addEventListener("change", atualizarPrevia);
+    if (!parceladaNoCartao) campo("compraCategoria").addEventListener("change", atualizarPrevia);
     campo("compraParcelas").addEventListener("change", atualizarPrevia);
     campo("compraValor").addEventListener("input", atualizarPrevia);
     atualizarPrevia();
@@ -2434,7 +2450,7 @@ if (btnResetarDados) {
 // ========================================
 
 // Alterar junto com APP_VERSION em sw.js em cada publicação.
-const APP_VERSION = "2.2";
+const APP_VERSION = "2.3";
 const btnAtualizarApp = document.getElementById("btnAtualizarApp");
 const statusAtualizacao = document.getElementById("statusAtualizacao");
 const versaoApp = document.getElementById("versaoApp");
