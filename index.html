@@ -53,6 +53,10 @@
         <symbol id="icon-trash" viewBox="0 0 24 24"><path d="M3 6h18M8 6V4h8v2M6 6l1 15h10l1-15M10 10v7M14 10v7"/></symbol>
         <symbol id="icon-other" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="2"/><rect x="14" y="3" width="7" height="7" rx="2"/><rect x="3" y="14" width="7" height="7" rx="2"/><path d="M14 17.5h7M17.5 14v7"/></symbol>
         <symbol id="icon-games" viewBox="0 0 24 24"><rect x="2" y="6" width="20" height="14" rx="5"/><path d="M6 13h6M9 10v6M12 6V3h4M16 11h.01M19 15h.01"/></symbol>
+        <symbol id="icon-save" viewBox="0 0 24 24"><path d="M4 3h13l4 4v14H3V3zM7 3v6h9V3M7 21v-8h10v8"/></symbol>
+        <symbol id="icon-edit" viewBox="0 0 24 24"><path d="m14 5 5 5M4 16 16 4a2 2 0 0 1 4 4L8 20l-5 1z"/></symbol>
+        <symbol id="icon-copy" viewBox="0 0 24 24"><rect x="8" y="8" width="13" height="13" rx="2"/><path d="M16 8V3H3v13h5"/></symbol>
+        <symbol id="icon-check" viewBox="0 0 24 24"><path d="m4 12 5 5L20 6"/></symbol>
     </svg>
 
     <div id="app">
@@ -263,8 +267,8 @@
                     </div>
 
                     <div class="acoes-formulario">
-                        <button type="button" id="btnCopiarQualificacao" class="botao-principal">📋 Copiar Texto Formatado</button>
-                        <button type="submit" class="botao-secundario">💾 Salvar no Histórico</button>
+                        <button type="button" id="btnCopiarQualificacao" class="botao-principal"><svg class="icone-acao" aria-hidden="true"><use href="#icon-copy"></use></svg> Copiar Texto Formatado</button>
+                        <button type="submit" class="botao-secundario"><svg class="icone-acao" aria-hidden="true"><use href="#icon-save"></use></svg> Salvar no Histórico</button>
                         <button type="button" id="btnLimparFormQualificacao" class="botao-excluir" style="width:100%; text-align:center; padding:10px;">Limpar Formulário</button>
                     </div>
 
@@ -330,8 +334,8 @@
                     </div>
 
                     <div class="acoes-formulario">
-                        <button type="button" id="btnCopiarTurno" class="botao-principal">📋 Copiar Resumo do Turno</button>
-                        <button type="submit" class="botao-secundario">✅ Concluir e salvar turno</button>
+                        <button type="button" id="btnCopiarTurno" class="botao-principal"><svg class="icone-acao" aria-hidden="true"><use href="#icon-copy"></use></svg> Copiar Resumo do Turno</button>
+                        <button type="submit" class="botao-secundario"><svg class="icone-acao" aria-hidden="true"><use href="#icon-check"></use></svg> Concluir e salvar turno</button>
                         <button type="button" id="btnLimparFormTurno" class="botao-excluir" style="width:100%; text-align:center; padding:10px;">Apagar rascunho</button>
                     </div>
 
@@ -380,7 +384,7 @@
                         <textarea id="rRelato" rows="7" placeholder="Descreva os fatos em ordem. O texto fica salvo somente neste aparelho." required></textarea>
                     </div>
                     <div class="acoes-formulario">
-                        <button type="submit" id="btnSalvarReds" class="botao-principal">💾 Salvar rascunho</button>
+                        <button type="submit" id="btnSalvarReds" class="botao-principal"><svg class="icone-acao" aria-hidden="true"><use href="#icon-save"></use></svg> Salvar rascunho</button>
                         <button type="button" id="btnLimparReds" class="botao-secundario">Limpar formulário</button>
                     </div>
                 </form>

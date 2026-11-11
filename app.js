@@ -1,3 +1,8 @@
+// Ícones SVG locais, compartilhados com as abas principais.
+function iconeApp(nome) {
+    return `<svg class="icone-acao" aria-hidden="true" focusable="false"><use href="#icon-${nome}"></use></svg>`;
+}
+
 // ========================================
 // MEU APP - VERSÃO NATIVA iOS COMPLETA
 // ========================================
@@ -313,7 +318,7 @@ function renderizarAcademia() {
     if (!academiaConteudo) return;
     if (!fichasAcademia.length) {
         academiaSelecionadaFichaId = null;
-        academiaConteudo.innerHTML = '<section class="academia-vazio"><div>🏋️</div><h3>Suas fichas aparecerão aqui</h3><p>Crie uma ficha, por exemplo, “Ficha A” ou “Peito e bíceps”, e adicione os exercícios.</p></section>';
+        academiaConteudo.innerHTML = `<section class="academia-vazio"><div>${iconeApp("gym")}</div><h3>Suas fichas aparecerão aqui</h3><p>Crie uma ficha, por exemplo, “Ficha A” ou “Peito e bíceps”, e adicione os exercícios.</p></section>`;
         return;
     }
     if (!fichasAcademia.some(f => f.id === academiaSelecionadaFichaId)) academiaSelecionadaFichaId = fichasAcademia[0].id;
@@ -419,7 +424,7 @@ function terminarEdicaoQualificacao() {
     const anterior = edicaoQualificacao;
     edicaoQualificacao = null;
     Object.entries(anterior.rascunho).forEach(([id, valor]) => { document.getElementById(id).value = valor; });
-    formQualificacao.querySelector('[type="submit"]').textContent = anterior.rotulo;
+    formQualificacao.querySelector('[type="submit"]').innerHTML = anterior.rotulo;
     document.getElementById('btnLimparFormQualificacao').textContent = anterior.limpar;
 }
 window.editarQualificacao = function(id) {
@@ -430,7 +435,7 @@ window.editarQualificacao = function(id) {
         terminarEdicaoQualificacao();
     }
     edicaoQualificacao = { id, rascunho: Object.fromEntries(Object.values(camposEdicaoQualificacao).map(id => [id, document.getElementById(id).value])),
-        rotulo: formQualificacao.querySelector('[type="submit"]').textContent,
+        rotulo: formQualificacao.querySelector('[type="submit"]').innerHTML,
         limpar: document.getElementById('btnLimparFormQualificacao').textContent };
     Object.entries(camposEdicaoQualificacao).forEach(([chave, id]) => {
         const campo = document.getElementById(id);
@@ -440,7 +445,7 @@ window.editarQualificacao = function(id) {
         }
         campo.value = valor;
     });
-    formQualificacao.querySelector('[type="submit"]').textContent = '💾 Salvar alterações';
+    formQualificacao.querySelector('[type="submit"]').innerHTML = iconeApp("save") + "Salvar alterações";
     document.getElementById('btnLimparFormQualificacao').textContent = 'Cancelar edição';
     formQualificacao.scrollIntoView({ block: 'start', behavior: 'smooth' });
 };
@@ -560,11 +565,11 @@ const entradasDoMes = entradas.filter(
         div.innerHTML = `
             <div style="display:flex; justify-content:space-between; width:100%; align-items:center;">
                 <strong>[${item.condicao}] ${item.nome}</strong>
-                <button class="botao-excluir" onclick="excluirQualificacao(${item.id})">✕ Excluir</button>
+                <button class="botao-excluir" onclick="excluirQualificacao(${item.id})">${iconeApp("trash")} Excluir</button>
             </div>
             <p style="font-size:13px; color:var(--text-muted);">CPF: ${item.cpf || "N/I"} | RG: ${item.rg || "N/I"}</p>
-            <button class="botao-secundario" style="padding:8px 12px; font-size:12px;" onclick="editarQualificacao(${item.id})">✏️ Editar</button>
-            <button class="botao-secundario" style="padding:8px 12px; font-size:12px; margin-top:4px;" onclick="copiarQualificacaoSalva(${item.id})">📋 Copiar Dados</button>
+            <button class="botao-secundario" style="padding:8px 12px; font-size:12px;" onclick="editarQualificacao(${item.id})">${iconeApp("edit")} Editar</button>
+            <button class="botao-secundario" style="padding:8px 12px; font-size:12px; margin-top:4px;" onclick="copiarQualificacaoSalva(${item.id})">${iconeApp("copy")} Copiar Dados</button>
         `;
         lista.appendChild(div);
     });
@@ -662,7 +667,7 @@ function editarReds(id) {
     document.getElementById("rRelato").value = item.relato || "";
     redsEmEdicaoId = id;
     document.getElementById("tituloFormReds").textContent = "Editar rascunho";
-    document.getElementById("btnSalvarReds").textContent = "💾 Atualizar rascunho";
+    document.getElementById("btnSalvarReds").innerHTML = iconeApp("save") + "Atualizar rascunho";
     formReds.scrollIntoView({ behavior: "smooth", block: "start" });
 }
 
@@ -680,7 +685,7 @@ function limparFormReds() {
     const titulo = document.getElementById("tituloFormReds");
     const botao = document.getElementById("btnSalvarReds");
     if (titulo) titulo.textContent = "Novo rascunho";
-    if (botao) botao.textContent = "💾 Salvar rascunho";
+    if (botao) botao.innerHTML = iconeApp("save") + "Salvar rascunho";
 }
 
 if (formReds) {
@@ -856,7 +861,7 @@ function terminarEdicaoTurno() {
     const anterior = edicaoTurno;
     edicaoTurno = null;
     Object.entries(anterior.rascunho).forEach(([id, valor]) => { document.getElementById(id).value = valor; });
-    formMeuTurno.querySelector('[type="submit"]').textContent = anterior.rotulo;
+    formMeuTurno.querySelector('[type="submit"]').innerHTML = anterior.rotulo;
     document.getElementById('btnLimparFormTurno').textContent = anterior.limpar;
 }
 window.editarTurno = function(id) {
@@ -867,7 +872,7 @@ window.editarTurno = function(id) {
         terminarEdicaoTurno();
     }
     edicaoTurno = { id, rascunho: Object.fromEntries(Object.values(camposEdicaoTurno).map(id => [id, document.getElementById(id).value])),
-        rotulo: formMeuTurno.querySelector('[type="submit"]').textContent,
+        rotulo: formMeuTurno.querySelector('[type="submit"]').innerHTML,
         limpar: document.getElementById('btnLimparFormTurno').textContent };
     Object.entries(camposEdicaoTurno).forEach(([chave, id]) => {
         const campo = document.getElementById(id);
@@ -877,7 +882,7 @@ window.editarTurno = function(id) {
         }
         campo.value = valor;
     });
-    formMeuTurno.querySelector('[type="submit"]').textContent = '💾 Salvar alterações';
+    formMeuTurno.querySelector('[type="submit"]').innerHTML = iconeApp("save") + "Salvar alterações";
     document.getElementById('btnLimparFormTurno').textContent = 'Cancelar edição';
     formMeuTurno.scrollIntoView({ block: 'start', behavior: 'smooth' });
 };
@@ -951,14 +956,14 @@ function restaurarRascunhoTurno() {
 
 function gerarTextoTurno(d) {
     return `*REGISTRO DE TURNO*
-📅 Data: ${formatarDataTurno(d.data)}
-🕐 Horário inicial: ${d.horaInicial || "N/I"}
-🕘 Horário final: ${d.horaFinal || "N/I"}
-🚔 Viatura: ${d.viatura || "N/I"}
-📍 Box de armamento: ${d.box || "N/I"}
-🏎️ KM Inicial: ${d.kmInicial || "N/I"}
-🏁 KM Final: ${d.kmFinal || "N/I"}
-📊 KM Rodado: ${d.kmRodado} km`;
+Data: ${formatarDataTurno(d.data)}
+Horário inicial: ${d.horaInicial || "N/I"}
+Horário final: ${d.horaFinal || "N/I"}
+Viatura: ${d.viatura || "N/I"}
+Box de armamento: ${d.box || "N/I"}
+KM Inicial: ${d.kmInicial || "N/I"}
+KM Final: ${d.kmFinal || "N/I"}
+KM Rodado: ${d.kmRodado} km`;
 }
 
 if (formMeuTurno) {
@@ -1042,14 +1047,14 @@ function renderizarTurnosSalvos() {
 
         div.innerHTML = `
             <div style="display:flex; justify-content:space-between; width:100%; align-items:center;">
-                <strong>🚔 ${item.viatura || "Viatura N/I"} (${formatarDataTurno(item.data)})</strong>
-                <button class="botao-excluir" onclick="excluirTurno(${item.id})">✕ Excluir</button>
+                <strong>${iconeApp("patrol")} ${item.viatura || "Viatura N/I"} (${formatarDataTurno(item.data)})</strong>
+                <button class="botao-excluir" onclick="excluirTurno(${item.id})">${iconeApp("trash")} Excluir</button>
             </div>
             <p style="font-size:13px; color:var(--text-muted);">Horário: ${item.horaInicial || "N/I"}–${item.horaFinal || "N/I"}</p>
             <p style="font-size:13px; color:var(--text-muted);">Box de armamento: ${item.box || "N/I"}</p>
             <p style="font-size:13px; color:var(--text-muted);">KM: ${item.kmInicial || "0"} → ${item.kmFinal || "0"} (${item.kmRodado} km rodados)</p>
-            <button class="botao-secundario" style="padding:8px 12px; font-size:12px;" onclick="editarTurno(${item.id})">✏️ Editar</button>
-            <button class="botao-secundario" style="padding:8px 12px; font-size:12px; margin-top:4px;" onclick="copiarTurnoSalvo(${item.id})">📋 Copiar Dados</button>
+            <button class="botao-secundario" style="padding:8px 12px; font-size:12px;" onclick="editarTurno(${item.id})">${iconeApp("edit")} Editar</button>
+            <button class="botao-secundario" style="padding:8px 12px; font-size:12px; margin-top:4px;" onclick="copiarTurnoSalvo(${item.id})">${iconeApp("copy")} Copiar Dados</button>
         `;
         lista.appendChild(div);
     });
@@ -1330,12 +1335,12 @@ function abrirDetalhamentoGastos() {
     const competencia = obterCompetenciaAtual();
 
     const nomes = {
-        fixos: "🏠 Gastos Fixos",
-        mercado: "🛒 Mercado",
-        lazer: "🎮 Lazer",
-        transporte: "🚗 Transporte",
-        assinaturas: "🔄 Assinaturas",
-        trabalho: "💼 Trabalho",
+        fixos: `${iconeApp("house")} Gastos Fixos`,
+        mercado: `${iconeApp("basket")} Mercado`,
+        lazer: `${iconeApp("leisure")} Lazer`,
+        transporte: `${iconeApp("car")} Transporte`,
+        assinaturas: `${iconeApp("repeat")} Assinaturas`,
+        trabalho: `${iconeApp("briefcase")} Trabalho`,
         outros: "Outros"
     };
 
@@ -1402,7 +1407,7 @@ html += `
     padding:12px 0;
     border-bottom:1px solid var(--border-color);
   ">
-    <span>💳 Cartões</span>
+    <span>${iconeApp("card")} Cartões</span>
     <strong>${formatarMoeda(cartoes)}</strong>
   </div>
 
@@ -1593,9 +1598,9 @@ function atualizarListaEntradas() {
 
                     <button
                         class="botao-excluir"
-                        onclick="excluirEntrada(${item.id})"
+                        onclick="excluirEntrada(${item.id})" aria-label="Excluir entrada"
                     >
-                        ✕
+                        ${iconeApp("trash")}
                     </button>
                 </div>
             `;
@@ -1680,18 +1685,7 @@ if (btnNovaCompraParcelada) {
             <div class="campo-form" style="margin-bottom:12px;">
     <label>Número de Parcelas</label>
     <select id="mCompraParcelas">
-        <option value="1">1x</option>
-        <option value="2">2x</option>
-        <option value="3">3x</option>
-        <option value="4">4x</option>
-        <option value="5">5x</option>
-        <option value="6">6x</option>
-        <option value="7">7x</option>
-        <option value="8">8x</option>
-        <option value="9">9x</option>
-        <option value="10">10x</option>
-        <option value="11">11x</option>
-        <option value="12">12x</option>
+        ${Array.from({ length: 24 }, (_, i) => `<option value="${i + 1}">${i + 1}x</option>`).join("")}
     </select>
 </div>
             <div class="campo-form">
@@ -1703,11 +1697,12 @@ if (btnNovaCompraParcelada) {
         abrirModal("Nova Compra Parcelada", html, () => {
             const desc = document.getElementById("mCompraDesc")?.value.trim();
             const valorTotal = parseFloat(document.getElementById("mCompraValor")?.value);
-            const parcelas = parseInt(document.getElementById("mCompraParcelas")?.value, 10);
+            const parcelas = Number(document.getElementById("mCompraParcelas")?.value);
             const cartaoSel = document.getElementById("mCompraCartao")?.value;
 
-            if (!desc || isNaN(valorTotal) || isNaN(parcelas) || valorTotal <= 0 || parcelas <= 0) {
-                return alert("Dados incorretos.");
+            if (!desc || !Number.isFinite(valorTotal) || !Number.isInteger(parcelas) || valorTotal <= 0 || parcelas < 1 || parcelas > 24) {
+                alert("Confira os dados e selecione de 1 a 24 parcelas.");
+                return false;
             }
 
             comprasCartao.push({
@@ -1815,7 +1810,7 @@ const comprasDoCartao = comprasCartao.filter(c =>
             font-size:16px;
         "
         title="Editar"
-    >✏️</button>
+    >${iconeApp("edit")}</button>
 
     <button
         class="botao-excluir"
@@ -1830,7 +1825,7 @@ const comprasDoCartao = comprasCartao.filter(c =>
         bloco.innerHTML = `
             <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid var(--border-color); padding-bottom:8px;">
                 <div>
-                    <h3 style="font-size:16px;">💳 ${cartao}</h3>
+                    <h3 style="font-size:16px;">${iconeApp("card")} ${cartao}</h3>
                     <small style="color:var(--text-muted);">Parcelas no Mês: ${formatarMoeda(subtotalCartaoMes)}</small>
                 </div>
                 <button class="botao-excluir" style="font-size:12px;" onclick="excluirCartao('${cartao}')">Excluir</button>
@@ -1873,9 +1868,9 @@ window.editarCompraCartao = function(id) {
         <div class="campo-form" style="margin-bottom:12px;">
             <label>Número de Parcelas</label>
             <select id="mEditarCompraParcelas">
-                ${Array.from({ length: 12 }, (_, i) => {
+                ${Array.from({ length: 24 }, (_, i) => {
                     const n = i + 1;
-                    return `<option value="${n}" ${n === compra.parcelas ? "selected" : ""}>${n}x</option>`;
+                    return `<option value="${n}" ${n === Number(compra.parcelas) ? "selected" : ""}>${n}x</option>`;
                 }).join("")}
             </select>
         </div>
@@ -1893,21 +1888,19 @@ window.editarCompraCartao = function(id) {
         const valorTotal = parseFloat(
             document.getElementById("mEditarCompraValor")?.value
         );
-        const parcelas = parseInt(
-            document.getElementById("mEditarCompraParcelas")?.value,
-            10
-        );
+        const parcelas = Number(document.getElementById("mEditarCompraParcelas")?.value);
         const cartao = document.getElementById("mEditarCompraCartao")?.value;
 
         if (
             !desc ||
-            isNaN(valorTotal) ||
+            !Number.isFinite(valorTotal) ||
             valorTotal <= 0 ||
-            isNaN(parcelas) ||
-            parcelas <= 0 ||
+            !Number.isInteger(parcelas) ||
+            parcelas < 1 || parcelas > 24 ||
             !cartao
         ) {
-            return alert("Dados incorretos.");
+            alert("Confira os dados e selecione de 1 a 24 parcelas.");
+            return false;
         }
 
         compra.descricao = desc;
@@ -2108,7 +2101,7 @@ if (btnNovoGastoCategoria) {
                     "
                 >
                     <strong style="font-size:13px;">
-                        🔄 Cobrança recorrente
+                        ${iconeApp("repeat")} Cobrança recorrente
                     </strong>
 
                     <p
@@ -2238,7 +2231,7 @@ function atualizarListaGastosCategoria() {
             div.className = "lancamento";
 
             const indicadorRecorrente = item.recorrente
-                ? `<small style="color:var(--text-muted);">🔄 Recorrente</small>`
+                ? `<small style="color:var(--text-muted);">${iconeApp("repeat")} Recorrente</small>`
                 : "";
 
             div.innerHTML = `
@@ -2608,7 +2601,7 @@ if (btnResetarDados) {
 // ========================================
 
 // Alterar junto com APP_VERSION em sw.js em cada publicação.
-const APP_VERSION = "19.0";
+const APP_VERSION = "20.0";
 const btnAtualizarApp = document.getElementById("btnAtualizarApp");
 const statusAtualizacao = document.getElementById("statusAtualizacao");
 const versaoApp = document.getElementById("versaoApp");
