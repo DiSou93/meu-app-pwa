@@ -2366,7 +2366,7 @@ if (btnResetarDados) {
 // ========================================
 
 // Alterar junto com APP_VERSION em sw.js em cada publicação.
-const APP_VERSION = "2.0";
+const APP_VERSION = "2.0.1";
 const btnAtualizarApp = document.getElementById("btnAtualizarApp");
 const statusAtualizacao = document.getElementById("statusAtualizacao");
 const versaoApp = document.getElementById("versaoApp");
