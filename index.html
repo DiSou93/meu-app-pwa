@@ -498,12 +498,27 @@
     <button id="btnCompetenciaAnterior" class="botao-mes">‹</button>
 
     <div class="mes-atual">
-        <span>Competência</span>
+        <span>Mês de referência</span>
         <strong id="textoMesAtual">Setembro/2026</strong>
     </div>
 
     <button id="btnProximoMes" class="botao-mes">›</button>
 </section>
+                <section class="financas-painel" aria-label="Compras e próxima cobrança">
+                    <button type="button" class="botao-principal" id="btnNovaCompraFinanceira">+ Nova compra</button>
+                    <div class="financas-resumos">
+                        <button type="button" class="financas-resumo" id="btnComprasDoMes">
+                            <span>Compras de <span id="mesComprasDoMes"></span></span>
+                            <strong id="totalComprasDoMes">R$ 0,00</strong>
+                            <small>Ver compras pelo valor integral ›</small>
+                        </button>
+                        <button type="button" class="financas-resumo" id="btnProximaCobranca">
+                            <span>Previsão de <span id="mesProximaCobranca"></span></span>
+                            <strong id="totalProximaCobranca">R$ 0,00</strong>
+                            <small>Ver contas e faturas ›</small>
+                        </button>
+                    </div>
+                </section>
                 <section class="saldo" id="cardSaldoStatus">
                     <span class="saldo-label">Disponível no Mês</span>
                     <strong id="valorDisponivel">R$ 0,00</strong>
@@ -516,9 +531,9 @@
 
                     <div class="resumo-detalhes">
                         <span>Entradas: <b id="resumoEntradas">R$ 0,00</b></span>
-                        <span id="btnDetalharGastos" style="cursor:pointer;">
-                            Gastos: <b id="resumoGastos">R$ 0,00</b> ›
-                        </span>
+                        <button type="button" id="btnDetalharGastos" class="financas-link">
+                            A pagar no mês: <b id="resumoGastos">R$ 0,00</b> ›
+                        </button>
                     </div>
                 </section>
 
@@ -532,7 +547,7 @@
                     <button class="card-financeiro" id="btnCartao" data-id="cartao">
                         <span class="icone tom-azul" aria-hidden="true"><svg><use href="#icon-card"></use></svg></span>
                         <span class="titulo">Cartão</span>
-                        <span class="descricao">Compras parceladas</span>
+                        <span class="descricao">Faturas e compras no crédito</span>
                     </button>
 
                     <button class="card-financeiro" id="btnFixos" data-id="fixos">
@@ -610,11 +625,11 @@
             <header class="topo">
                 <button class="botao-voltar btn-voltar-financas">← Voltar</button>
                 <h1>Cartões de Crédito</h1>
-                <p>Apenas compras parceladas</p>
+                <p>Compras no crédito e faturas do mês selecionado</p>
             </header>
             <main>
                 <section class="saldo">
-                    <span class="saldo-label">Fatura Mensal (Parcelas do Mês)</span>
+                    <span class="saldo-label">Total dos cartões a pagar no mês</span>
                     <strong id="totalParcelasMes">R$ 0,00</strong>
                 </section>
 
@@ -640,7 +655,7 @@
             </header>
             <main>
                 <section class="saldo">
-                    <span class="saldo-label">Total na Categoria</span>
+                    <span class="saldo-label" id="rotuloTotalCategoria">Total na Categoria</span>
                     <strong id="totalCategoriaGasto">R$ 0,00</strong>
                 </section>
                 <section id="listaGastosCategoria" class="lista-lancamentos"></section>

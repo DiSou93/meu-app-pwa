@@ -1172,3 +1172,24 @@ button:focus-visible, summary:focus-visible { outline: 2px solid var(--accent); 
 .campo-form input[type="datetime-local"]::-webkit-datetime-edit-fields-wrapper {
   padding: 0;
 }
+/* Compras por data e cobranças previstas em Finanças. */
+.financas-painel { display: grid; gap: 12px; margin-bottom: 16px; }
+.financas-resumos { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 150px), 1fr)); gap: 10px; }
+.financas-resumo {
+  display: grid; align-content: start; gap: 7px; padding: 14px;
+  text-align: left; border: 1px solid var(--border-color); border-radius: 16px;
+  background: var(--card-bg); color: var(--text-main); font: inherit; cursor: pointer;
+  overflow-wrap: anywhere;
+}
+.financas-resumo > span { font-size: 13px; font-weight: 600; }
+.financas-resumo > strong { font-size: clamp(18px, 4.5vw, 23px); color: var(--accent); }
+.financas-resumo small, .financas-nota, .linha-compra small { color: var(--text-muted); font-size: 13px; line-height: 1.5; }
+.financas-nota { margin: 0 0 12px; }
+.financas-link { border: 0; background: transparent; color: inherit; font: inherit; text-align: left; min-height: 44px; cursor: pointer; }
+.financas-grupo { border: 1px solid var(--border-color); border-radius: 14px; padding: 10px; margin-bottom: 10px; }
+.financas-grupo summary { padding: 8px 2px; cursor: pointer; font-weight: 600; overflow-wrap: anywhere; }
+.linha-compra { gap: 10px; align-items: start; overflow-wrap: anywhere; }
+.linha-compra small { display: block; }
+.linha-compra > div { min-width: 0; }
+.linha-compra > strong { flex-shrink: 0; }
+#compraCamposCredito[hidden] { display: none; }

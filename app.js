@@ -1173,42 +1173,25 @@ function calcularTotalEntradas() {
         .reduce((acc, item) => acc + Number(item.valor), 0);
 }
 
-function calcularTotalParcelasCartaoMes() {
-    const competencia = obterCompetenciaAtual();
-
-    return comprasCartao
-        .filter(item => compraAtivaNaCompetencia(item, competencia))
-        .reduce(
-            (acc, item) =>
-                acc + (Number(item.valorTotal) / Number(item.parcelas)),
-            0
-        );
+function calcularValorParcela(compra, numeroParcela) {
+    const parcelas = Number(compra.parcelas);
+    if (!compra.rateioCentavos) return Number(compra.valorTotal) / parcelas;
+    const centavos = Math.round(Number(compra.valorTotal) * 100);
+    return (Math.floor(centavos / parcelas) + (numeroParcela <= centavos % parcelas ? 1 : 0)) / 100;
 }
 
+function calcularTotalParcelasCartaoMes(competencia = obterCompetenciaAtual()) {
+    return obterParcelasCartaoDaCompetencia(competencia).reduce((total, item) => total + item.valorParcela, 0);
+}
 
-function obterParcelasCartaoDaCompetencia() {
-    const competencia = obterCompetenciaAtual();
-
+function obterParcelasCartaoDaCompetencia(competencia = obterCompetenciaAtual()) {
     return comprasCartao
         .filter(compra => compraAtivaNaCompetencia(compra, competencia))
         .map(compra => {
-            const [anoInicio, mesInicio] = compra.competencia.split("-").map(Number);
-            const [anoAtual, mesAtual] = competencia.split("-").map(Number);
-
-            const indiceInicio = anoInicio * 12 + (mesInicio - 1);
-            const indiceAtual = anoAtual * 12 + (mesAtual - 1);
-
-            const numeroParcela = indiceAtual - indiceInicio + 1;
-            const valorParcela = Number(compra.valorTotal) / Number(compra.parcelas);
-
-            return {
-                ...compra,
-                numeroParcela,
-                valorParcela
-            };
+            const numeroParcela = competenciaParaNumero(competencia) - competenciaParaNumero(compra.competencia) + 1;
+            return { ...compra, numeroParcela, valorParcela: calcularValorParcela(compra, numeroParcela) };
         });
 }
-
 
 function compraAtivaNaCompetencia(item, competencia) {
     if (!item.competencia || !item.parcelas) return false;
@@ -1224,69 +1207,21 @@ function compraAtivaNaCompetencia(item, competencia) {
     return parcelaAtual >= 1 && parcelaAtual <= Number(item.parcelas);
 }
 
-function calcularTotalCategoria(categoria) {
-    const competencia = obterCompetenciaAtual();
-    const itens = gastos[categoria] || [];
-
-    if (categoria === "fixos" || categoria === "assinaturas") {
-        return itens
-            .filter(item =>
-                recorrenciaAtivaNaCompetencia(item, competencia)
-            )
-            .reduce(
-                (acc, item) => acc + Number(item.valor),
-                0
-            );
-    }
-
-    return itens
-        .filter(item => item.competencia === competencia)
-        .reduce(
-            (acc, item) => acc + Number(item.valor),
-            0
-        );
+function itensCategoriaParaPagar(categoria, competencia) {
+    const recorrente = categoria === "fixos" || categoria === "assinaturas";
+    return (gastos[categoria] || []).filter(item => recorrente
+        ? recorrenciaAtivaNaCompetencia(item, competencia)
+        : item.competencia === competencia);
 }
 
-function calcularTotalGastosCategorias() {
-    const competencia = obterCompetenciaAtual();
-
-    let total = 0;
-
-    // Gastos normais daquele mês
-    ["mercado", "lazer", "transporte", "trabalho", "outros"].forEach(categoria => {
-
-        const itens = gastos[categoria] || [];
-
-        total += itens
-            .filter(item => item.competencia === competencia)
-            .reduce(
-                (acc, item) => acc + Number(item.valor),
-                0
-            );
-    });
-
-    // Gastos recorrentes
-    ["fixos", "assinaturas"].forEach(categoria => {
-
-        const itens = gastos[categoria] || [];
-
-        total += itens
-            .filter(item =>
-                recorrenciaAtivaNaCompetencia(
-                    item,
-                    competencia
-                )
-            )
-            .reduce(
-                (acc, item) => acc + Number(item.valor),
-                0
-            );
-    });
-
-    return total;
+function calcularTotalGastosCategorias(competencia = obterCompetenciaAtual()) {
+    return Object.keys(configCategorias).reduce((total, categoria) =>
+        total + itensCategoriaParaPagar(categoria, competencia).reduce((soma, item) => soma + Number(item.valor), 0), 0
+    );
 }
 
 function atualizarBalançoGeral() {
+    atualizarPainelCompras(obterCompetenciaAtual());
     const elDisponivel = document.getElementById("valorDisponivel");
     const elResumoEntradas = document.getElementById("resumoEntradas");
     const elResumoGastos = document.getElementById("resumoGastos");
@@ -1331,181 +1266,50 @@ function atualizarBalançoGeral() {
 }
 
 
-function abrirDetalhamentoGastos() {
-    const competencia = obterCompetenciaAtual();
-
-    const nomes = {
-        fixos: `${iconeApp("house")} Gastos Fixos`,
-        mercado: `${iconeApp("basket")} Mercado`,
-        lazer: `${iconeApp("leisure")} Lazer`,
-        transporte: `${iconeApp("car")} Transporte`,
-        assinaturas: `${iconeApp("repeat")} Assinaturas`,
-        trabalho: `${iconeApp("briefcase")} Trabalho`,
-        outros: "Outros"
-    };
-
-    const categorias = [
-        "fixos",
-        "mercado",
-        "lazer",
-        "transporte",
-        "assinaturas",
-        "trabalho",
-        "outros"
-    ];
-
-    let html = "";
-    let total = 0;
-
-    categorias.forEach(categoria => {
-        const itens = gastos[categoria] || [];
-
-        let subtotal = 0;
-
-        if (categoria === "fixos" || categoria === "assinaturas") {
-            subtotal = itens
-                .filter(item =>
-                    recorrenciaAtivaNaCompetencia(item, competencia)
-                )
-                .reduce(
-                    (acc, item) => acc + Number(item.valor),
-                    0
-                );
-        } else {
-            subtotal = itens
-                .filter(item => item.competencia === competencia)
-                .reduce(
-                    (acc, item) => acc + Number(item.valor),
-                    0
-                );
-        }
-
-        total += subtotal;
-
-        html += `
-  <div style="
-    display:flex;
-    justify-content:space-between;
-    align-items:center;
-    padding:12px 0;
-    border-bottom:1px solid var(--border-color);
-  ">
-    <span>${nomes[categoria]}</span>
-    <strong>${formatarMoeda(subtotal)}</strong>
-  </div>
-`;
-});
-
-const cartoes = calcularTotalParcelasCartaoMes();
-total += cartoes;
-
-html += `
-  <div id="linhaDetalheCartoes" style="
-    display:flex;
-    justify-content:space-between;
-    align-items:center;
-    padding:12px 0;
-    border-bottom:1px solid var(--border-color);
-  ">
-    <span>${iconeApp("card")} Cartões</span>
-    <strong>${formatarMoeda(cartoes)}</strong>
-  </div>
-
-  <div style="
-    display:flex;
-    justify-content:space-between;
-    align-items:center;
-    padding-top:18px;
-    font-size:17px;
-  ">
-    <strong>Total</strong>
-    <strong>${formatarMoeda(total)}</strong>
-  </div>
-`;
-
-abrirModal("Detalhamento de Gastos", html);
-
-setTimeout(() => {
-    const linhaCartoes = document.getElementById("linhaDetalheCartoes");
-  
-    if (linhaCartoes) {
-      linhaCartoes.style.cursor = "pointer";
-      linhaCartoes.addEventListener("click", () => {
-        window.abrirDetalhamentoCartoes();
-      });
-    }
-  }, 0);
+function abrirDetalhamentoGastos(competencia = obterCompetenciaAtual()) {
+    const esc = escaparHTMLAcademia;
+    const linhasCategoria = Object.keys(configCategorias).map(categoria => {
+        const itens = itensCategoriaParaPagar(categoria, competencia);
+        if (!itens.length) return "";
+        const subtotal = itens.reduce((soma, item) => soma + Number(item.valor), 0);
+        return `<details class="financas-grupo">
+            <summary>${configCategorias[categoria].titulo} · ${formatarMoeda(subtotal)}</summary>
+            ${itens.map(item => `<div class="lancamento linha-compra">
+                <div><strong>${esc(item.descricao)}</strong>${item.metodoPagamento === "credito" ? "<small>Crédito sem cartão vinculado</small>" : ""}</div>
+                <strong>${formatarMoeda(Number(item.valor))}</strong></div>`).join("")}
+        </details>`;
+    }).join("");
+    const faturas = detalharFaturasPorCartao(competencia);
+    abrirModal(`A pagar em ${rotuloCompetencia(competencia)}`, `
+        <p class="financas-nota">Valores previstos para cobrança neste mês, conforme os lançamentos.</p>
+        ${linhasCategoria}${faturas}
+        ${!linhasCategoria && !faturas ? '<p class="financas-nota">Nenhuma cobrança registrada para este mês.</p>' : ""}
+        <p class="financas-nota"><strong>Total a pagar: ${formatarMoeda(calcularTotalGastosCategorias(competencia) + calcularTotalParcelasCartaoMes(competencia))}</strong></p>`);
 }
 
+function detalharFaturasPorCartao(competencia) {
+    const grupos = new Map();
+    for (const parcela of obterParcelasCartaoDaCompetencia(competencia)) {
+        const itens = grupos.get(parcela.cartao) || [];
+        itens.push(parcela);
+        grupos.set(parcela.cartao, itens);
+    }
+    return [...grupos].map(([cartao, itens]) => `<details class="financas-grupo">
+        <summary>${iconeApp("card")} ${escaparHTMLAcademia(cartao)} · ${formatarMoeda(itens.reduce((soma, item) => soma + item.valorParcela, 0))}</summary>
+        ${itens.map(item => `<div class="lancamento linha-compra">
+            <div><strong>${escaparHTMLAcademia(item.descricao)}</strong>
+                <small>Parcela ${item.numeroParcela}/${Number(item.parcelas)} · ${nomeCategoriaCompra(item.categoria)}</small></div>
+            <strong>${formatarMoeda(item.valorParcela)}</strong></div>`).join("")}
+    </details>`).join("");
+}
 
 window.abrirDetalhamentoCartoes = function() {
-    const parcelas = obterParcelasCartaoDaCompetencia()
-    .sort((a, b) => {
-        const restantesA = a.parcelas - a.numeroParcela;
-        const restantesB = b.parcelas - b.numeroParcela;
-
-        return restantesB - restantesA;
-    });
-
-    let html = "";
-
-    if (parcelas.length === 0) {
-        html = `
-            <p style="text-align:center; opacity:0.6; padding:20px 0;">
-                Nenhuma parcela de cartão nesta competência.
-            </p>
-        `;
-    } else {
-        parcelas.forEach(compra => {
-            html += `
-                <div style="
-                    padding:12px 0;
-                    border-bottom:1px solid var(--border-color);
-                ">
-                    <div style="
-                        display:flex;
-                        justify-content:space-between;
-                        gap:15px;
-                    ">
-                        <strong>${compra.descricao}</strong>
-                        <strong>${formatarMoeda(compra.valorParcela)}</strong>
-                    </div>
-
-                    <small style="opacity:0.65;">
-                        ${compra.cartao} • Parcela ${compra.numeroParcela}/${compra.parcelas}
-                    </small>
-                </div>
-            `;
-        });
-
-        const total = parcelas.reduce(
-            (acc, compra) => acc + compra.valorParcela,
-            0
-        );
-
-        html += `
-            <div style="
-                display:flex;
-                justify-content:space-between;
-                padding-top:18px;
-                font-size:17px;
-            ">
-                <strong>Total dos cartões</strong>
-                <strong>${formatarMoeda(total)}</strong>
-            </div>
-        `;
-    }
-
-    abrirModal("Parcelas do Mês", html);
+    const competencia = obterCompetenciaAtual();
+    abrirModal(`Faturas de ${rotuloCompetencia(competencia)}`,
+        detalharFaturasPorCartao(competencia) || '<p class="financas-nota">Nenhuma cobrança de cartão neste mês.</p>');
 };
 
-
-const btnDetalharGastos = document.getElementById("btnDetalharGastos");
-
-if (btnDetalharGastos) {
-    btnDetalharGastos.addEventListener("click", abrirDetalhamentoGastos);
-}
-
+document.getElementById("btnDetalharGastos")?.addEventListener("click", () => abrirDetalhamentoGastos());
 
 // Entradas com Modal
 if (btnEntrada) {
@@ -1667,58 +1471,7 @@ if (btnNovoCartao) {
     });
 }
 
-if (btnNovaCompraParcelada) {
-    btnNovaCompraParcelada.addEventListener("click", () => {
-        if (cartoes.length === 0) return alert("Cadastre ao menos um cartão.");
-
-        const opcoesCartoes = cartoes.map(c => `<option value="${c}">${c}</option>`).join("");
-
-        const html = `
-            <div class="campo-form" style="margin-bottom:12px;">
-                <label>Descrição da Compra</label>
-                <input type="text" id="mCompraDesc" placeholder="Ex: Celular Novo">
-            </div>
-            <div class="campo-form" style="margin-bottom:12px;">
-                <label>Valor TOTAL (R$)</label>
-                <input type="number" step="0.01" id="mCompraValor" placeholder="Ex: 1200.00">
-            </div>
-            <div class="campo-form" style="margin-bottom:12px;">
-    <label>Número de Parcelas</label>
-    <select id="mCompraParcelas">
-        ${Array.from({ length: 24 }, (_, i) => `<option value="${i + 1}">${i + 1}x</option>`).join("")}
-    </select>
-</div>
-            <div class="campo-form">
-                <label>Selecione o Cartão</label>
-                <select id="mCompraCartao">${opcoesCartoes}</select>
-            </div>
-        `;
-
-        abrirModal("Nova Compra Parcelada", html, () => {
-            const desc = document.getElementById("mCompraDesc")?.value.trim();
-            const valorTotal = parseFloat(document.getElementById("mCompraValor")?.value);
-            const parcelas = Number(document.getElementById("mCompraParcelas")?.value);
-            const cartaoSel = document.getElementById("mCompraCartao")?.value;
-
-            if (!desc || !Number.isFinite(valorTotal) || !Number.isInteger(parcelas) || valorTotal <= 0 || parcelas < 1 || parcelas > 24) {
-                alert("Confira os dados e selecione de 1 a 24 parcelas.");
-                return false;
-            }
-
-            comprasCartao.push({
-                id: Date.now(),
-                descricao: desc,
-                valorTotal,
-                parcelas,
-                cartao: cartaoSel,
-                competencia: obterCompetenciaAtual()
-            });
-
-            localStorage.setItem("meuAppComprasCartao", JSON.stringify(comprasCartao));
-            renderizarCartoesECompras();
-        });
-    });
-}
+btnNovaCompraParcelada?.addEventListener("click", () => abrirCadastroCompra({ somenteCredito: true }));
 
 function renderizarCartoesECompras() {
     const container = document.getElementById("containerCartoes");
@@ -1743,56 +1496,26 @@ function renderizarCartoesECompras() {
 
         const competencia = obterCompetenciaAtual();
 
-const comprasDoCartao = comprasCartao.filter(c =>
-    c.cartao === cartao &&
-    compraAtivaNaCompetencia(c, competencia)
-);
+        const comprasDoCartao = obterParcelasCartaoDaCompetencia(competencia)
+            .filter(item => item.cartao === cartao)
+            .sort((a, b) => (b.parcelas - b.numeroParcela) - (a.parcelas - a.numeroParcela));
         let subtotalCartaoMes = 0;
 
         let comprasHTML = "";
         if (comprasDoCartao.length === 0) {
             comprasHTML = `<p style="font-size:13px; color:var(--text-muted); margin-top:8px;">Nenhuma compra neste cartão.</p>`;
         } else {
-            [...comprasDoCartao]
-    .sort((a, b) => {
-        const calcularRestantes = (compra) => {
-            const [anoInicio, mesInicio] = compra.competencia.split("-").map(Number);
-            const [anoAtual, mesAtual] = competencia.split("-").map(Number);
-
-            const indiceInicio = anoInicio * 12 + (mesInicio - 1);
-            const indiceAtual = anoAtual * 12 + (mesAtual - 1);
-
-            const numeroParcela = indiceAtual - indiceInicio + 1;
-            return compra.parcelas - numeroParcela + 1;
-        };
-
-        return calcularRestantes(b) - calcularRestantes(a);
-    })
-    .forEach(compra => {
-                const valorParcela = compra.valorTotal / compra.parcelas;
-            
-                const [anoInicio, mesInicio] = compra.competencia
-                    .split("-")
-                    .map(Number);
-            
-                const [anoAtual, mesAtual] = competencia
-                    .split("-")
-                    .map(Number);
-            
-                const indiceInicio = anoInicio * 12 + (mesInicio - 1);
-                const indiceAtual = anoAtual * 12 + (mesAtual - 1);
-            
-                const numeroParcela = indiceAtual - indiceInicio + 1;
-            
+            comprasDoCartao.forEach(compra => {
+                const { numeroParcela, valorParcela } = compra;
                 subtotalCartaoMes += valorParcela;
-
-                const parcelasRestantes = compra.parcelas - numeroParcela + 1;
-                const saldoRestante = valorParcela * parcelasRestantes;
-            
+                const parcelasRestantes = Number(compra.parcelas) - numeroParcela + 1;
+                const saldoRestante = Array.from({ length: parcelasRestantes }, (_, i) =>
+                    calcularValorParcela(compra, numeroParcela + i)
+                ).reduce((soma, valor) => soma + valor, 0);
                 comprasHTML += `
                     <div class="lancamento" style="margin-top:8px;">
                         <div>
-                            <strong>${compra.descricao}</strong><br>
+                            <strong>${escaparHTMLAcademia(compra.descricao)}</strong><br>
                             <small style="color:var(--text-muted);">
     Parcela ${numeroParcela}/${compra.parcelas} • ${formatarMoeda(valorParcela)}<br>
     Restam ${parcelasRestantes} parcela${parcelasRestantes !== 1 ? "s" : ""} • 
@@ -1825,97 +1548,22 @@ const comprasDoCartao = comprasCartao.filter(c =>
         bloco.innerHTML = `
             <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid var(--border-color); padding-bottom:8px;">
                 <div>
-                    <h3 style="font-size:16px;">${iconeApp("card")} ${cartao}</h3>
+                    <h3 style="font-size:16px;">${iconeApp("card")} ${escaparHTMLAcademia(cartao)}</h3>
                     <small style="color:var(--text-muted);">Parcelas no Mês: ${formatarMoeda(subtotalCartaoMes)}</small>
                 </div>
-                <button class="botao-excluir" style="font-size:12px;" onclick="excluirCartao('${cartao}')">Excluir</button>
+                <button class="botao-excluir" style="font-size:12px;" data-excluir-cartao>Excluir</button>
             </div>
             <div>${comprasHTML}</div>
         `;
 
+        bloco.querySelector("[data-excluir-cartao]").addEventListener("click", () => window.excluirCartao(cartao));
         container.appendChild(bloco);
     });
 }
 
 window.editarCompraCartao = function(id) {
-    const compra = comprasCartao.find(c => c.id === id);
-    if (!compra) return;
-
-    const opcoesCartoes = cartoes.map(c =>
-        `<option value="${c}" ${c === compra.cartao ? "selected" : ""}>${c}</option>`
-    ).join("");
-
-    const html = `
-        <div class="campo-form" style="margin-bottom:12px;">
-            <label>Descrição da Compra</label>
-            <input
-                type="text"
-                id="mEditarCompraDesc"
-                value="${compra.descricao}"
-            >
-        </div>
-
-        <div class="campo-form" style="margin-bottom:12px;">
-            <label>Valor TOTAL (R$)</label>
-            <input
-                type="number"
-                step="0.01"
-                id="mEditarCompraValor"
-                value="${compra.valorTotal}"
-            >
-        </div>
-
-        <div class="campo-form" style="margin-bottom:12px;">
-            <label>Número de Parcelas</label>
-            <select id="mEditarCompraParcelas">
-                ${Array.from({ length: 24 }, (_, i) => {
-                    const n = i + 1;
-                    return `<option value="${n}" ${n === Number(compra.parcelas) ? "selected" : ""}>${n}x</option>`;
-                }).join("")}
-            </select>
-        </div>
-
-        <div class="campo-form">
-            <label>Cartão</label>
-            <select id="mEditarCompraCartao">
-                ${opcoesCartoes}
-            </select>
-        </div>
-    `;
-
-    abrirModal("Editar Compra", html, () => {
-        const desc = document.getElementById("mEditarCompraDesc")?.value.trim();
-        const valorTotal = parseFloat(
-            document.getElementById("mEditarCompraValor")?.value
-        );
-        const parcelas = Number(document.getElementById("mEditarCompraParcelas")?.value);
-        const cartao = document.getElementById("mEditarCompraCartao")?.value;
-
-        if (
-            !desc ||
-            !Number.isFinite(valorTotal) ||
-            valorTotal <= 0 ||
-            !Number.isInteger(parcelas) ||
-            parcelas < 1 || parcelas > 24 ||
-            !cartao
-        ) {
-            alert("Confira os dados e selecione de 1 a 24 parcelas.");
-            return false;
-        }
-
-        compra.descricao = desc;
-        compra.valorTotal = valorTotal;
-        compra.parcelas = parcelas;
-        compra.cartao = cartao;
-
-        localStorage.setItem(
-            "meuAppComprasCartao",
-            JSON.stringify(comprasCartao)
-        );
-
-        renderizarCartoesECompras();
-        atualizarBalançoGeral();
-    });
+    const compra = comprasCartao.find(item => item.id === id);
+    if (compra) abrirCadastroCompra({ compra });
 };
 
 window.excluirCartao = function(nomeCartao) {
@@ -1987,10 +1635,11 @@ window.excluirCompraCartao = function(id) {
 
     renderizarCartoesECompras();
     atualizarBalançoGeral();
+    if (!telaGastosGenerica.hidden) atualizarListaGastosCategoria();
 };
 
 
-// A data da compra é informativa; a competência parte do mês selecionado.
+// Mês seguinte para a sugestão de cobrança no crédito.
 function competenciaDoPagamento(competenciaBase, metodo) {
     if (metodo !== "credito") return competenciaBase;
     const [ano, mes] = competenciaBase.split("-").map(Number);
@@ -2035,154 +1684,225 @@ function abrirCategoriaGasto(categoriaKey) {
     }
 });
 
-if (btnNovoGastoCategoria) {
-    btnNovoGastoCategoria.addEventListener("click", () => {
-        if (!categoriaAtualGasto) return;
-        
-        const config = configCategorias[categoriaAtualGasto];
-        const competenciaBase = obterCompetenciaAtual();
-
-        const categoriaRecorrente =
-    categoriaAtualGasto === "fixos" ||
-    categoriaAtualGasto === "assinaturas";
-
-    const html = `
-    <div class="campo-form" style="margin-bottom:12px;">
-        <label>Descrição</label>
-        <input
-            type="text"
-            id="mGastoDesc"
-            placeholder="${
-                categoriaRecorrente
-                    ? "Ex: Internet, Netflix"
-                    : categoriaAtualGasto === "outros"
-                        ? "Ex: Farmácia, consulta ou presente"
-                        : "Ex: Compra quinzenal"
-            }"
-        >
-    </div>
-
-    <div class="campo-form">
-        <label>Valor (R$)</label>
-        <input
-            type="number"
-            step="0.01"
-            id="mGastoValor"
-            placeholder="Ex: 150.00"
-        >
-    </div>
-
-    ${!categoriaRecorrente ? `
-        <div class="campo-form" style="margin-top:12px;">
-            <label for="mGastoDataCompra">Data da compra</label>
-            <input type="date" id="mGastoDataCompra" value="${dataCompraInicial(competenciaBase)}" required>
-        </div>
-        <div class="campo-form" style="margin-top:12px;">
-            <label for="mGastoPagamento">Forma de pagamento</label>
-            <select id="mGastoPagamento" required>
-                <option value="">Selecione</option>
-                <option value="debito">Débito</option>
-                <option value="pix">Pix</option>
-                <option value="credito">Crédito</option>
-            </select>
-        </div>
-        <p id="mGastoCompetencia" aria-live="polite" style="margin-top:12px; font-size:13px; color:var(--text-muted);"></p>
-        <p style="margin-top:6px; font-size:12px; color:var(--text-muted);">A data registra o dia da compra. Débito/Pix entram no mês selecionado; Crédito, no seguinte.</p>
-    ` : ""}
-    ${
-        categoriaRecorrente
-            ? `
-                <div
-                    style="
-                        margin-top:14px;
-                        padding:12px;
-                        background:var(--bg-app);
-                        border-radius:12px;
-                    "
-                >
-                    <strong style="font-size:13px;">
-                        ${iconeApp("repeat")} Cobrança recorrente
-                    </strong>
-
-                    <p
-                        style="
-                            font-size:12px;
-                            color:var(--text-muted);
-                            margin-top:4px;
-                        "
-                    >
-                        Será repetida automaticamente nos próximos meses.
-                    </p>
-                </div>
-            `
-            : ""
+btnNovoGastoCategoria?.addEventListener("click", () => {
+    const categoria = categoriaAtualGasto;
+    if (!categoria) return;
+    if (categoriasCompra.includes(categoria)) {
+        abrirCadastroCompra({ categoria });
+        return;
     }
-`;
+    const competenciaInicio = obterCompetenciaAtual();
+    abrirModal(`Novo gasto em ${configCategorias[categoria].titulo}`, `
+        <div class="games-form">
+            <div class="campo-form"><label for="mGastoDesc">Descrição</label><input id="mGastoDesc" placeholder="Ex: Internet, Netflix"></div>
+            <div class="campo-form"><label for="mGastoValor">Valor (R$)</label><input type="number" step="0.01" id="mGastoValor"></div>
+            <p class="financas-nota">${iconeApp("repeat")} Cobrança recorrente a partir de ${rotuloCompetencia(competenciaInicio)}.</p>
+        </div>`, () => {
+        const descricao = document.getElementById("mGastoDesc").value.trim();
+        const valor = Number(document.getElementById("mGastoValor").value);
+        if (!descricao || !Number.isFinite(valor) || valor <= 0) {
+            alert("Preencha a descrição e um valor maior que zero.");
+            return false;
+        }
+        const itens = gastos[categoria] || [];
+        const registro = { id: proximoIdFinanceiro(itens), descricao, valor, recorrente: true,
+            competenciaInicio, competenciaFim: null, dataCriacao: new Date().toISOString() };
+        const novosGastos = { ...gastos, [categoria]: [...itens, registro] };
+        localStorage.setItem("meuAppGastos", JSON.stringify(novosGastos));
+        gastos = novosGastos;
+        atualizarListaGastosCategoria();
+        atualizarBalançoGeral();
+    });
+});
 
-        abrirModal(`Novo Gasto em ${config.titulo}`, html, () => {
-            const desc = document.getElementById("mGastoDesc")?.value.trim();
-            const val = parseFloat(document.getElementById("mGastoValor")?.value);
+const categoriasCompra = ["mercado", "lazer", "transporte", "trabalho", "outros"];
+const nomesPagamento = { credito: "Crédito", debito: "Débito", pix: "Pix" };
 
-            if (!desc || !Number.isFinite(val) || val <= 0) {
-                alert("Preencha a descrição e um valor maior que zero.");
+function nomeCategoriaCompra(categoria) {
+    return categoriasCompra.includes(categoria) ? configCategorias[categoria].titulo : "Sem categoria";
+}
+
+function obterComprasDoMes(competencia, categoria = null) {
+    const avulsos = categoriasCompra.flatMap(chave =>
+        (gastos[chave] || []).map(item => ({ ...item, categoria: chave, origem: "gastos" }))
+    );
+    const credito = comprasCartao.map(item => ({
+        ...item, valor: item.valorTotal, metodoPagamento: "credito", origem: "cartao"
+    }));
+    return [...avulsos, ...credito].filter(item =>
+        (!categoria || item.categoria === categoria) &&
+        dataCompraValida(item.dataCompra || "") &&
+        item.dataCompra.slice(0, 7) === competencia
+    ).sort((a, b) => b.dataCompra.localeCompare(a.dataCompra));
+}
+
+function subtotalCompras(itens) {
+    return itens.reduce((soma, item) => soma + Math.round(Number(item.valor) * 100), 0) / 100;
+}
+
+function linhaCompra(item, exibirCategoria = false) {
+    const esc = escaparHTMLAcademia;
+    const data = dataCompraValida(item.dataCompra || "") ? formatarDataTurno(item.dataCompra) : "Sem data de compra";
+    const metodo = nomesPagamento[item.metodoPagamento] || "Pagamento não informado";
+    const cartao = item.origem === "cartao"
+        ? ` · ${esc(item.cartao)} · ${Number(item.parcelas)}x`
+        : item.metodoPagamento === "credito" ? " · Sem cartão vinculado" : "";
+    return `<div class="lancamento linha-compra">
+        <div>
+            <strong>${esc(item.descricao)}</strong>
+            <small>${data}${exibirCategoria ? " · " + nomeCategoriaCompra(item.categoria) : ""}</small>
+            <small>${metodo}${cartao} · ${item.origem === "cartao" ? "Primeira cobrança" : "Cobrança"}: ${esc(rotuloCompetencia(String(item.competencia || "")))}</small>
+        </div>
+        <strong>${formatarMoeda(Number(item.valor))}</strong>
+    </div>`;
+}
+
+function abrirComprasDoMes() {
+    const competencia = obterCompetenciaAtual();
+    const itens = obterComprasDoMes(competencia);
+    abrirModal(`Compras de ${rotuloCompetencia(competencia)}`, `
+        <p class="financas-nota">Valores integrais das compras feitas neste mês. As parcelas aparecem em “A pagar” na data de cobrança.</p>
+        ${itens.length ? itens.map(item => linhaCompra(item, true)).join("") : '<p class="financas-nota">Nenhuma compra com data registrada neste mês.</p>'}
+        <p class="financas-nota">Compras antigas sem data continuam no detalhamento das cobranças.</p>
+        <strong>Total: ${formatarMoeda(subtotalCompras(itens))}</strong>`);
+}
+
+function atualizarPainelCompras(competencia) {
+    const proximo = competenciaDoPagamento(competencia, "credito");
+    const compras = obterComprasDoMes(competencia);
+    document.getElementById("totalComprasDoMes").textContent = formatarMoeda(subtotalCompras(compras));
+    document.getElementById("mesComprasDoMes").textContent = rotuloCompetencia(competencia);
+    document.getElementById("mesProximaCobranca").textContent = rotuloCompetencia(proximo);
+    document.getElementById("totalProximaCobranca").textContent = formatarMoeda(
+        calcularTotalGastosCategorias(proximo) + calcularTotalParcelasCartaoMes(proximo)
+    );
+}
+
+function abrirCadastroCompra({ categoria = "outros", somenteCredito = false, compra = null } = {}) {
+    const esc = escaparHTMLAcademia;
+    const mesTela = obterCompetenciaAtual();
+    const dataInicial = compra ? compra.dataCompra || "" : dataCompraInicial(mesTela);
+    const categoriaInicial = compra ? compra.categoria || "" : categoria;
+    const cartoesDisponiveis = [...new Set([...cartoes, ...(compra?.cartao ? [compra.cartao] : [])])];
+    const opcoesCartao = cartoesDisponiveis.map(cartao =>
+        `<option value="${esc(cartao)}"${compra?.cartao === cartao ? " selected" : ""}>${esc(cartao)}</option>`
+    ).join("");
+    const opcoesCategoria = categoriasCompra.map(chave =>
+        `<option value="${chave}"${categoriaInicial === chave ? " selected" : ""}>${nomeCategoriaCompra(chave)}</option>`
+    ).join("");
+    const parcelaInicial = Number(compra?.parcelas || 1);
+    const opcoesParcelas = Array.from({ length: 24 }, (_, i) =>
+        `<option value="${i + 1}"${parcelaInicial === i + 1 ? " selected" : ""}>${i + 1}x</option>`
+    ).join("");
+
+    abrirModal(compra ? "Editar compra" : "Nova compra", `
+        <div class="games-form">
+            <div class="campo-form"><label for="compraDescricao">Descrição</label><input id="compraDescricao" maxlength="160" value="${esc(compra?.descricao)}" placeholder="Ex: Supermercado"></div>
+            <div class="campo-form"><label for="compraValor">Valor total (R$)</label><input id="compraValor" type="number" min="0.01" step="0.01" inputmode="decimal" value="${esc(compra?.valorTotal)}"></div>
+            <div class="campo-form"><label for="compraData">Data da compra</label><input id="compraData" type="date" value="${esc(dataInicial)}"></div>
+            ${compra && !dataInicial ? '<p class="financas-nota">Compra antiga sem data. Preencha se souber a data original.</p>' : ""}
+            <div class="campo-form"><label for="compraCategoria">Categoria</label><select id="compraCategoria">${compra && !categoriaInicial ? '<option value="">Sem categoria</option>' : ""}${opcoesCategoria}</select></div>
+            <div class="campo-form"><label for="compraPagamento">Pagamento</label><select id="compraPagamento"${somenteCredito || compra ? " disabled" : ""}><option value="credito">Crédito</option><option value="debito">Débito</option><option value="pix">Pix</option></select></div>
+            <div id="compraCamposCredito" class="games-form">
+                <div class="campo-form"><label for="compraCartao">Cartão</label><select id="compraCartao">${opcoesCartao || '<option value="">Nenhum cartão cadastrado</option>'}</select></div>
+                <div class="campo-form"><label for="compraParcelas">Parcelas</label><select id="compraParcelas">${opcoesParcelas}</select></div>
+                <div class="campo-form"><label for="compraCobranca">Mês da primeira cobrança</label><input id="compraCobranca" type="month" placeholder="AAAA-MM" value="${esc(compra?.competencia || competenciaDoPagamento(mesTela, "credito"))}"></div>
+            </div>
+            <p id="compraPrevia" class="financas-nota" role="status"></p>
+        </div>`, () => {
+        const descricao = campo("compraDescricao").value.trim();
+        const valor = Number(campo("compraValor").value);
+        const centavos = Math.round(valor * 100);
+        const dataCompra = campo("compraData").value;
+        const categoriaEscolhida = campo("compraCategoria").value;
+        const metodoPagamento = campo("compraPagamento").value;
+        const dataOpcional = compra && !compra.dataCompra && !dataCompra;
+        if (!descricao || !Number.isSafeInteger(centavos) || centavos <= 0 ||
+            Math.abs(valor * 100 - centavos) > 0.00001 ||
+            (!dataOpcional && !dataCompraValida(dataCompra))) {
+            alert("Informe a descrição, um valor válido e a data da compra.");
+            return false;
+        }
+        if (!Object.hasOwn(nomesPagamento, metodoPagamento) ||
+            (!categoriasCompra.includes(categoriaEscolhida) && !(compra && !categoriaEscolhida))) {
+            alert("Confira a categoria e a forma de pagamento.");
+            return false;
+        }
+        const competenciaOrigem = dataCompra ? dataCompra.slice(0, 7) : "";
+        if (metodoPagamento === "credito") {
+            const cartao = campo("compraCartao").value;
+            const parcelas = Number(campo("compraParcelas").value);
+            const competencia = campo("compraCobranca").value.trim();
+            if (!cartoesDisponiveis.includes(cartao) || !Number.isInteger(parcelas) || parcelas < 1 || parcelas > 24 ||
+                !dataCompraValida(`${competencia}-01`) ||
+                (competenciaOrigem && competencia < competenciaOrigem)) {
+                alert("Confira o cartão, as parcelas (1 a 24) e o mês de cobrança. A cobrança não pode ser anterior à compra.");
                 return false;
             }
-            const dataCompra = document.getElementById("mGastoDataCompra")?.value;
-            const metodoPagamento = document.getElementById("mGastoPagamento")?.value;
-            if (!categoriaRecorrente && (!dataCompraValida(dataCompra || "") || !["debito", "pix", "credito"].includes(metodoPagamento))) {
-                alert("Selecione uma data válida e a forma de pagamento.");
-                return false;
-            }
-
-            if (categoriaRecorrente) {
-
-                gastos[categoriaAtualGasto].push({
-                    id: Date.now(),
-                    descricao: desc,
-                    valor: val,
-            
-                    recorrente: true,
-            
-                    competenciaInicio: obterCompetenciaAtual(),
-                    competenciaFim: null,
-            
-                    dataCriacao: new Date().toISOString()
-                });
-            
-            } else {
-            
-                gastos[categoriaAtualGasto].push({
-                    id: Date.now(),
-                    descricao: desc,
-                    valor: val,
-            
-                    competencia: competenciaDoPagamento(competenciaBase, metodoPagamento),
-                    competenciaOrigem: competenciaBase,
-                    dataCompra,
-                    metodoPagamento,
-                    data: new Date().toISOString()
-                });
-            
-            }
-            localStorage.setItem("meuAppGastos", JSON.stringify(gastos));
-            atualizarListaGastosCategoria();
-            atualizarBalançoGeral();
-            if (!categoriaRecorrente && metodoPagamento === "credito") {
-                alert(`Gasto salvo em ${rotuloCompetencia(competenciaDoPagamento(competenciaBase, metodoPagamento))}. Avance para essa competência para consultá-lo.`);
-            }
-        });
-        if (!categoriaRecorrente) {
-            const pagamento = document.getElementById("mGastoPagamento");
-            const atualizarPrevia = () => {
-                document.getElementById("mGastoCompetencia").textContent = pagamento.value
-                    ? `Será contabilizado em ${rotuloCompetencia(competenciaDoPagamento(competenciaBase, pagamento.value))}.`
-                    : "Selecione a forma de pagamento para conferir a competência.";
+            const registro = {
+                ...compra, id: compra?.id ?? proximoIdFinanceiro(comprasCartao),
+                descricao, valorTotal: centavos / 100, parcelas, cartao, competencia,
+                dataCompra, categoria: categoriaEscolhida,
+                rateioCentavos: compra ? compra.rateioCentavos : true
             };
-            pagamento.addEventListener("change", atualizarPrevia);
-            atualizarPrevia();
+            const novaLista = compra ? comprasCartao.map(item => item.id === compra.id ? registro : item) : [...comprasCartao, registro];
+            localStorage.setItem("meuAppComprasCartao", JSON.stringify(novaLista));
+            comprasCartao = novaLista;
+        } else {
+            const itens = gastos[categoriaEscolhida] || [];
+            const registro = { id: proximoIdFinanceiro(itens), descricao, valor: centavos / 100,
+                dataCompra, metodoPagamento, competencia: competenciaOrigem, competenciaOrigem, data: new Date().toISOString() };
+            const novosGastos = { ...gastos, [categoriaEscolhida]: [...itens, registro] };
+            localStorage.setItem("meuAppGastos", JSON.stringify(novosGastos));
+            gastos = novosGastos;
+        }
+        atualizarBalançoGeral();
+        if (!telaCartao.hidden) renderizarCartoesECompras();
+        if (!telaGastosGenerica.hidden) atualizarListaGastosCategoria();
+        if (competenciaOrigem && competenciaOrigem !== mesTela) {
+            alert(`Compra salva em ${rotuloCompetencia(competenciaOrigem)}.`);
         }
     });
+
+    const campo = id => document.getElementById(id);
+    let cobrancaAjustada = Boolean(compra);
+    const atualizarPrevia = () => {
+        const credito = campo("compraPagamento").value === "credito";
+        const data = campo("compraData").value;
+        const origem = dataCompraValida(data) ? data.slice(0, 7) : "";
+        campo("compraCamposCredito").hidden = !credito;
+        const cobranca = campo("compraCobranca").value.trim();
+        const valor = Number(campo("compraValor").value);
+        const parcelas = Number(campo("compraParcelas").value);
+        campo("compraPrevia").textContent = credito
+            ? !cartoesDisponiveis.length ? "Cadastre um cartão em Finanças → Cartão ou escolha Débito/Pix."
+            : `Primeira cobrança: ${dataCompraValida(cobranca + "-01") ? rotuloCompetencia(cobranca) : "informe o mês"}${valor > 0 ? " · Cerca de " + formatarMoeda(valor / parcelas) + " por parcela" : ""}.`
+            : origem ? `Pagamento em ${rotuloCompetencia(origem)}.` : "Informe a data da compra para definir o mês do pagamento.";
+    };
+    campo("compraData").addEventListener("change", () => {
+        const data = campo("compraData").value;
+        if (!cobrancaAjustada && dataCompraValida(data)) campo("compraCobranca").value = competenciaDoPagamento(data.slice(0, 7), "credito");
+        atualizarPrevia();
+    });
+    campo("compraCobranca").addEventListener("input", () => { cobrancaAjustada = true; atualizarPrevia(); });
+    campo("compraCobranca").addEventListener("change", () => { cobrancaAjustada = true; atualizarPrevia(); });
+    campo("compraPagamento").addEventListener("change", atualizarPrevia);
+    campo("compraParcelas").addEventListener("change", atualizarPrevia);
+    campo("compraValor").addEventListener("input", atualizarPrevia);
+    atualizarPrevia();
 }
+
+function proximoIdFinanceiro(itens) {
+    let id = Date.now();
+    while (itens.some(item => item.id === id)) id++;
+    return id;
+}
+
+document.getElementById("btnNovaCompraFinanceira")?.addEventListener("click", () => abrirCadastroCompra());
+document.getElementById("btnComprasDoMes")?.addEventListener("click", abrirComprasDoMes);
+document.getElementById("btnProximaCobranca")?.addEventListener("click", () =>
+    abrirDetalhamentoGastos(competenciaDoPagamento(obterCompetenciaAtual(), "credito"))
+);
 
 function atualizarListaGastosCategoria() {
     if (!categoriaAtualGasto) return;
@@ -2197,6 +1917,14 @@ function atualizarListaGastosCategoria() {
     const categoriaRecorrente =
         categoriaAtualGasto === "fixos" ||
         categoriaAtualGasto === "assinaturas";
+
+    const rotulo = document.getElementById("rotuloTotalCategoria");
+    rotulo.textContent = categoriaRecorrente ? "A pagar neste mês" : `Compras de ${rotuloCompetencia(competencia)}`;
+    btnNovoGastoCategoria.textContent = categoriaRecorrente ? "+ Adicionar gasto recorrente" : "+ Nova compra";
+    if (!categoriaRecorrente) {
+        renderizarComprasCategoria(lista, elTotal, competencia);
+        return;
+    }
 
     const todosItens = gastos[categoriaAtualGasto] || [];
 
@@ -2261,6 +1989,43 @@ function atualizarListaGastosCategoria() {
     }
 
     elTotal.textContent = formatarMoeda(total);
+}
+
+function renderizarComprasCategoria(lista, total, competencia) {
+    const itens = obterComprasDoMes(competencia, categoriaAtualGasto);
+    const semData = (gastos[categoriaAtualGasto] || [])
+        .filter(item => !dataCompraValida(item.dataCompra || "") && item.competencia === competencia)
+        .map(item => ({ ...item, origem: "gastos" }));
+    total.textContent = formatarMoeda(subtotalCompras(itens));
+    lista.replaceChildren();
+    function adicionar(item) {
+        const bloco = document.createElement("div");
+        bloco.className = "financas-grupo";
+        bloco.innerHTML = linhaCompra(item);
+        const acoes = document.createElement("div");
+        acoes.className = "veiculo-acoes";
+        const botao = (texto, acao) => {
+            const el = document.createElement("button");
+            el.type = "button";
+            el.className = "botao-secundario";
+            el.textContent = texto;
+            el.addEventListener("click", acao);
+            acoes.appendChild(el);
+        };
+        if (item.origem === "cartao") botao("Editar compra", () => window.editarCompraCartao(item.id));
+        botao("Excluir", () => item.origem === "cartao" ? window.excluirCompraCartao(item.id) : window.excluirGastoCategoria(item.id));
+        bloco.appendChild(acoes);
+        lista.appendChild(bloco);
+    }
+    if (!itens.length) lista.innerHTML = '<p class="financas-nota">Nenhuma compra com data registrada neste mês.</p>';
+    itens.forEach(adicionar);
+    if (semData.length) {
+        const aviso = document.createElement("p");
+        aviso.className = "financas-nota";
+        aviso.textContent = "Registros antigos sem data de compra, exibidos pelo mês da cobrança. Não entram no total de compras.";
+        lista.appendChild(aviso);
+        semData.forEach(adicionar);
+    }
 }
 
 window.excluirGastoCategoria = function(id) {
@@ -2601,7 +2366,7 @@ if (btnResetarDados) {
 // ========================================
 
 // Alterar junto com APP_VERSION em sw.js em cada publicação.
-const APP_VERSION = "20.0";
+const APP_VERSION = "2.0";
 const btnAtualizarApp = document.getElementById("btnAtualizarApp");
 const statusAtualizacao = document.getElementById("statusAtualizacao");
 const versaoApp = document.getElementById("versaoApp");

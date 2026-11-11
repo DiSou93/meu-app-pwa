@@ -1,5 +1,5 @@
 // Alterar esta versão e APP_VERSION em app.js juntas em cada publicação.
-const APP_VERSION = '20.0';
+const APP_VERSION = '2.0';
 const CACHE_PREFIX = `meu-app-${encodeURIComponent(self.registration.scope)}-`;
 const CACHE_NAME = `${CACHE_PREFIX}${APP_VERSION}`;
 const ASSETS_TO_CACHE = ['./', './index.html', './style.css', './app.js', './manifest.json', './icons/icon-192.png', './icons/icon-512.png'];
